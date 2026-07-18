@@ -51,6 +51,16 @@ exports.handler = async (event) => {
         let passwordValid = false;
         if (user.password_hash && user.password_hash.startsWith('$2')) {
             passwordValid = await bcrypt.compare(password, user.password_hash);
+        } else if (user.password_hash) {
+            passwordValid = (user.password_hash === password);
+            if (passwordValid) {
+                const newHash = await bcrypt.hash(password, 12);
+                await supabase
+                    .from('users')
+                    .update({ password_hash: newHash })
+                    .eq('id', user.id);
+                console.log('⬆️ تمت ترقية كلمة مرور المستخدم', user.username, 'من نص عادي إلى bcrypt');
+            }
         }
 
         if (!passwordValid) {
