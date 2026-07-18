@@ -393,10 +393,10 @@ WHERE b.deleted_at IS NULL;
 
 INSERT INTO users (username, password_hash, role, role_type, branch_name, is_active, can_edit, midwife_license, hospital_name, region, phone_number, whatsapp_number)
 VALUES 
-('midwife1', '$2a$12$bcbO6tNk1VZhLdfqeyG6Fet22BFF4ukHMGH0C/2wZ4HCnlxw3jnVG', 'employee', 'midwife', 'مركز صحي السلام', true, false, 'MW-2026-001', NULL, 'لحج', '771234567', '771234567'),
-('health1', '$2a$12$bcbO6tNk1VZhLdfqeyG6Fet22BFF4ukHMGH0C/2wZ4HCnlxw3jnVG', 'supervisor', 'health_officer', 'مستشفى السلام العام', true, true, NULL, 'مستشفى السلام العام', 'لحج', '771234568', '771234568'),
-('civil1', '$2a$12$bcbO6tNk1VZhLdfqeyG6Fet22BFF4ukHMGH0C/2wZ4HCnlxw3jnVG', 'supervisor', 'civil_officer', 'مكتب الأحوال المدنية - لحج', true, false, NULL, NULL, 'لحج', '771234569', '771234569'),
-('admin1', '$2a$12$bcbO6tNk1VZhLdfqeyG6Fet22BFF4ukHMGH0C/2wZ4HCnlxw3jnVG', 'admin', 'admin', 'الإدارة العامة', true, true, NULL, NULL, 'لحج', '771234570', '771234570')
+('midwife1', '$2a$12$5Zm7TA3Aiz9buriwhCGCuOtLvKnOJxbe6ogDvptOSdYkO/BYXLCki', 'employee', 'midwife', 'مركز صحي السلام', true, false, 'MW-2026-001', NULL, 'لحج', '771234567', '771234567'),
+('health1', '$2a$12$5Zm7TA3Aiz9buriwhCGCuOtLvKnOJxbe6ogDvptOSdYkO/BYXLCki', 'supervisor', 'health_officer', 'مستشفى السلام العام', true, true, NULL, 'مستشفى السلام العام', 'لحج', '771234568', '771234568'),
+('civil1', '$2a$12$5Zm7TA3Aiz9buriwhCGCuOtLvKnOJxbe6ogDvptOSdYkO/BYXLCki', 'supervisor', 'civil_officer', 'مكتب الأحوال المدنية - لحج', true, false, NULL, NULL, 'لحج', '771234569', '771234569'),
+('admin1', '$2a$12$5Zm7TA3Aiz9buriwhCGCuOtLvKnOJxbe6ogDvptOSdYkO/BYXLCki', 'admin', 'admin', 'الإدارة العامة', true, true, NULL, NULL, 'لحج', '771234570', '771234570')
 ON CONFLICT (username) DO NOTHING;
 
 
