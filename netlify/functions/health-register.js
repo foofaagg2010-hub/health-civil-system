@@ -1,79 +1,33 @@
-// netlify/functions/health-register.js
-const { createClient } = require('@supabase/supabase-js');
-
-const supabaseUrl = process.env.SUPABASE_URL || 'https://xhqfiuecmodoefzxesof.supabase.co';
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhocWZpdWVjbW9kb2Vmenhlc29mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMjQzMjAsImV4cCI6MjA5NzkwMDMyMH0.wTQU63rLayMAacfPd9IQIX5a4n-NChTIdDiRc22HWNM';
+const { getSupabase, authenticate, corsHeaders, handleOptions, error, success } = require('./_shared');
 
 exports.handler = async (event) => {
-    const headers = {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json'
-    };
+    const preflight = handleOptions(event);
+    if (preflight) return preflight;
 
-    if (event.httpMethod === 'OPTIONS') {
-        return {
-            statusCode: 204,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-User-Id'
-            }
-        };
-    }
+    if (event.httpMethod !== 'POST') return error(405, 'Method not allowed');
 
-    if (event.httpMethod !== 'POST') {
-        return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
-    }
+    const auth = await authenticate(event);
+    if (auth.error) return error(auth.status, auth.error);
 
-    const token = event.headers.authorization?.split(' ')[1];
-    if (!token) {
-        return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
+    const { user, session } = auth;
+
+    if (user.role_type !== 'health_officer' && user.role_type !== 'admin') {
+        return error(403, 'غير مصرح لك');
     }
 
     try {
-        const supabase = createClient(supabaseUrl, supabaseKey);
-
-        // التحقق من الجلسة
-        const { data: session, error: sessionError } = await supabase
-            .from('admin_sessions')
-            .select('user_id')
-            .eq('token', token)
-            .gte('expires_at', new Date().toISOString())
-            .single();
-
-        if (sessionError || !session) {
-            return { statusCode: 401, headers, body: JSON.stringify({ error: 'Invalid session' }) };
-        }
-
-        // جلب بيانات المستخدم
-        const { data: user, error: userError } = await supabase
-            .from('users')
-            .select('id, username, role_type, branch_name, region, hospital_name')
-            .eq('id', session.user_id)
-            .single();
-
-        if (userError || (user.role_type !== 'health_officer' && user.role_type !== 'admin')) {
-            return { statusCode: 403, headers, body: JSON.stringify({ error: 'غير مصرح لك' }) };
-        }
-
+        const supabase = getSupabase();
         const data = JSON.parse(event.body);
 
-        // التحقق من البيانات المطلوبة
         const required = ['baby_gender', 'father_name', 'mother_name', 'birth_place', 'birth_type', 'mother_phone'];
         for (const field of required) {
-            if (!data[field]) {
-                return { statusCode: 400, headers, body: JSON.stringify({ error: `حقل ${field} مطلوب` }) };
-            }
+            if (!data[field]) return error(400, `حقل ${field} مطلوب`);
         }
 
-        // تحضير تاريخ الولادة
         let birthDate = data.birth_date || new Date().toISOString().split('T')[0];
-
-        // ===== توليد رقم المولود التلقائي (محسّن) =====
         const yearPart = new Date(birthDate).getFullYear();
-        
-        // جلب أكبر رقم موجود حالياً
-        const { data: existingBirths, error: fetchError } = await supabase
+
+        const { data: existingBirths } = await supabase
             .from('births')
             .select('birth_number')
             .like('birth_number', `B-${yearPart}-%`)
@@ -83,27 +37,19 @@ exports.handler = async (event) => {
         let nextNumber = 1;
         if (existingBirths && existingBirths.length > 0) {
             const lastNum = parseInt(existingBirths[0].birth_number.split('-')[2]);
-            if (!isNaN(lastNum)) {
-                nextNumber = lastNum + 1;
-            }
+            if (!isNaN(lastNum)) nextNumber = lastNum + 1;
         }
 
-        // محاولة العثور على رقم غير مستخدم (في حالة وجود ثغرات)
         let birthNumber = null;
         let attempts = 0;
-        const maxAttempts = 100;
-
-        while (birthNumber === null && attempts < maxAttempts) {
+        while (birthNumber === null && attempts < 100) {
             const paddedNumber = String(nextNumber).padStart(6, '0');
             const testNumber = `B-${yearPart}-${paddedNumber}`;
-            
-            // التحقق من عدم وجود هذا الرقم
-            const { data: check, error: checkError } = await supabase
+            const { data: check } = await supabase
                 .from('births')
                 .select('birth_number')
                 .eq('birth_number', testNumber)
                 .maybeSingle();
-
             if (!check) {
                 birthNumber = testNumber;
             } else {
@@ -112,13 +58,10 @@ exports.handler = async (event) => {
             attempts++;
         }
 
-        if (!birthNumber) {
-            return { statusCode: 500, headers, body: JSON.stringify({ error: 'فشل توليد رقم المولود' }) };
-        }
+        if (!birthNumber) return error(500, 'فشل توليد رقم المولود');
 
-        // ===== توليد رقم الإخطار التلقائي =====
         const notifYearPart = new Date().getFullYear();
-        const { data: existingNotifs, error: notifFetchError } = await supabase
+        const { data: existingNotifs } = await supabase
             .from('birth_notifications')
             .select('notification_number')
             .like('notification_number', `N-${notifYearPart}-%`)
@@ -128,23 +71,19 @@ exports.handler = async (event) => {
         let nextNotifNumber = 1;
         if (existingNotifs && existingNotifs.length > 0) {
             const lastNum = parseInt(existingNotifs[0].notification_number.split('-')[2]);
-            if (!isNaN(lastNum)) {
-                nextNotifNumber = lastNum + 1;
-            }
+            if (!isNaN(lastNum)) nextNotifNumber = lastNum + 1;
         }
 
         let notificationNumber = null;
         let notifAttempts = 0;
-        while (notificationNumber === null && notifAttempts < maxAttempts) {
+        while (notificationNumber === null && notifAttempts < 100) {
             const paddedNotif = String(nextNotifNumber).padStart(6, '0');
             const testNotif = `N-${notifYearPart}-${paddedNotif}`;
-            
-            const { data: check, error: checkError } = await supabase
+            const { data: check } = await supabase
                 .from('birth_notifications')
                 .select('notification_number')
                 .eq('notification_number', testNotif)
                 .maybeSingle();
-
             if (!check) {
                 notificationNumber = testNotif;
             } else {
@@ -157,7 +96,6 @@ exports.handler = async (event) => {
             notificationNumber = `N-${notifYearPart}-${String(Date.now()).slice(-6)}`;
         }
 
-        // ===== إنشاء بيانات المولود =====
         const birthData = {
             birth_number: birthNumber,
             health_officer_id: session.user_id,
@@ -192,7 +130,6 @@ exports.handler = async (event) => {
             branch_name: user.branch_name || user.region || data.birth_governorate || ''
         };
 
-        // إدراج المولود
         const { data: birth, error: insertError } = await supabase
             .from('births')
             .insert(birthData)
@@ -200,11 +137,10 @@ exports.handler = async (event) => {
             .single();
 
         if (insertError) {
-            console.error('❌ خطأ في الإدراج:', insertError);
-            return { statusCode: 500, headers, body: JSON.stringify({ error: insertError.message }) };
+            console.error('Birth insert error:', insertError);
+            return error(500, 'فشل تسجيل المولود');
         }
 
-        // ===== إنشاء إخطار تلقائي =====
         const notificationData = {
             birth_id: birth.id,
             notification_number: notificationNumber,
@@ -215,23 +151,17 @@ exports.handler = async (event) => {
             notes: 'تم إنشاء الإخطار تلقائياً'
         };
 
-        const { data: notification, error: notifInsertError } = await supabase
+        const { data: notification } = await supabase
             .from('birth_notifications')
             .insert(notificationData)
             .select()
             .single();
 
-        if (notifInsertError) {
-            console.warn('⚠️ فشل إنشاء الإخطار التلقائي:', notifInsertError);
-        }
-
-        // تحديث حالة المولود إلى "printed"
         await supabase
             .from('births')
             .update({ status: 'printed' })
             .eq('id', birth.id);
 
-        // تسجيل في سير العمل
         await supabase
             .from('birth_workflow_logs')
             .insert({
@@ -244,21 +174,15 @@ exports.handler = async (event) => {
                 metadata: { source: 'health_officer_panel' }
             });
 
-        console.log('✅ تم تسجيل المولود بنجاح:', birthNumber);
+        return success({
+            success: true,
+            message: 'تم تسجيل المولود بنجاح',
+            birth: birth,
+            notification: notification || null
+        });
 
-        return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify({
-                success: true,
-                message: 'تم تسجيل المولود بنجاح',
-                birth: birth,
-                notification: notification || null
-            })
-        };
-
-    } catch (error) {
-        console.error('❌ خطأ في health-register:', error);
-        return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
+    } catch (err) {
+        console.error('Health-register error:', err);
+        return error(500, 'خطأ داخلي في الخادم');
     }
 };

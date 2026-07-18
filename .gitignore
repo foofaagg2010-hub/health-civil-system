@@ -28,3 +28,6 @@ build/
 # Logs
 logs/
 *.log
+
+# Sensitive files
+حسابات تجريبي.txt

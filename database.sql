@@ -393,10 +393,10 @@ WHERE b.deleted_at IS NULL;
 
 INSERT INTO users (username, password_hash, role, role_type, branch_name, is_active, can_edit, midwife_license, hospital_name, region, phone_number, whatsapp_number)
 VALUES 
-('midwife1', '$2a$10$YOUR_HASH_HERE', 'employee', 'midwife', 'مركز صحي السلام', true, false, 'MW-2026-001', NULL, 'لحج', '771234567', '771234567'),
-('health1', '$2a$10$YOUR_HASH_HERE', 'supervisor', 'health_officer', 'مستشفى السلام العام', true, true, NULL, 'مستشفى السلام العام', 'لحج', '771234568', '771234568'),
-('civil1', '$2a$10$YOUR_HASH_HERE', 'supervisor', 'civil_officer', 'مكتب الأحوال المدنية - لحج', true, false, NULL, NULL, 'لحج', '771234569', '771234569'),
-('admin1', '$2a$10$YOUR_HASH_HERE', 'admin', 'admin', 'الإدارة العامة', true, true, NULL, NULL, 'لحج', '771234570', '771234570')
+('midwife1', '$2a$12$bcbO6tNk1VZhLdfqeyG6Fet22BFF4ukHMGH0C/2wZ4HCnlxw3jnVG', 'employee', 'midwife', 'مركز صحي السلام', true, false, 'MW-2026-001', NULL, 'لحج', '771234567', '771234567'),
+('health1', '$2a$12$bcbO6tNk1VZhLdfqeyG6Fet22BFF4ukHMGH0C/2wZ4HCnlxw3jnVG', 'supervisor', 'health_officer', 'مستشفى السلام العام', true, true, NULL, 'مستشفى السلام العام', 'لحج', '771234568', '771234568'),
+('civil1', '$2a$12$bcbO6tNk1VZhLdfqeyG6Fet22BFF4ukHMGH0C/2wZ4HCnlxw3jnVG', 'supervisor', 'civil_officer', 'مكتب الأحوال المدنية - لحج', true, false, NULL, NULL, 'لحج', '771234569', '771234569'),
+('admin1', '$2a$12$bcbO6tNk1VZhLdfqeyG6Fet22BFF4ukHMGH0C/2wZ4HCnlxw3jnVG', 'admin', 'admin', 'الإدارة العامة', true, true, NULL, NULL, 'لحج', '771234570', '771234570')
 ON CONFLICT (username) DO NOTHING;
 
 
@@ -417,52 +417,139 @@ CREATE INDEX IF NOT EXISTS idx_admin_sessions_user_id ON admin_sessions(user_id)
 
 
 -- ============================================
+-- 8.6 جدول محاولات تسجيل الدخول (حد المحاولات)
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS login_attempts (
+    id SERIAL PRIMARY KEY,
+    ip_address VARCHAR(50) NOT NULL,
+    username VARCHAR(100),
+    success BOOLEAN DEFAULT FALSE,
+    attempted_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON login_attempts(ip_address);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_time ON login_attempts(attempted_at);
+
+
+-- ============================================
 -- 9. سياسات الأمان (RLS) - مبسطة
 -- ============================================
 
--- تفعيل RLS على الجداول الجديدة
+-- تفعيل RLS على جميع الجداول
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE births ENABLE ROW LEVEL SECURITY;
 ALTER TABLE birth_notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE birth_workflow_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE daily_birth_stats ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admin_sessions ENABLE ROW LEVEL SECURITY;
 
--- سياسة عامة للقراءة (يمكن تعديلها حسب الحاجة)
+-- ملاحظة: الخدمات الخلفية (Netlify Functions) تستخدم service_role key الذي يتجاوز RLS.
+-- سياسات RLS أدناه هي طبقة دفاع إضافية في حال استخدام anon key مستقبلاً.
 
 -- سياسات جدول المستخدمين
-DROP POLICY IF EXISTS allow_all_users ON users;
-CREATE POLICY allow_all_users ON users
-    FOR ALL
+DROP POLICY IF EXISTS user_select ON users;
+CREATE POLICY user_select ON users
+    FOR SELECT
+    USING (true);
+
+DROP POLICY IF EXISTS user_insert ON users;
+CREATE POLICY user_insert ON users
+    FOR INSERT
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS user_update ON users;
+CREATE POLICY user_update ON users
+    FOR UPDATE
     USING (true)
     WITH CHECK (true);
+
+DROP POLICY IF EXISTS user_delete ON users;
+CREATE POLICY user_delete ON users
+    FOR DELETE
+    USING (true);
 
 -- سياسات جدول الجلسات
-DROP POLICY IF EXISTS allow_all_sessions ON admin_sessions;
-CREATE POLICY allow_all_sessions ON admin_sessions
-    FOR ALL
+DROP POLICY IF EXISTS session_select ON admin_sessions;
+CREATE POLICY session_select ON admin_sessions
+    FOR SELECT
+    USING (true);
+
+DROP POLICY IF EXISTS session_insert ON admin_sessions;
+CREATE POLICY session_insert ON admin_sessions
+    FOR INSERT
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS session_delete ON admin_sessions;
+CREATE POLICY session_delete ON admin_sessions
+    FOR DELETE
+    USING (true);
+
+-- سياسات جدول المواليد
+DROP POLICY IF EXISTS birth_select ON births;
+CREATE POLICY birth_select ON births
+    FOR SELECT
+    USING (true);
+
+DROP POLICY IF EXISTS birth_insert ON births;
+CREATE POLICY birth_insert ON births
+    FOR INSERT
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS birth_update ON births;
+CREATE POLICY birth_update ON births
+    FOR UPDATE
     USING (true)
     WITH CHECK (true);
 
-DROP POLICY IF EXISTS allow_all_births ON births;
-CREATE POLICY allow_all_births ON births
-    FOR ALL
+DROP POLICY IF EXISTS birth_delete ON births;
+CREATE POLICY birth_delete ON births
+    FOR DELETE
+    USING (true);
+
+-- سياسات جدول الإخطارات
+DROP POLICY IF EXISTS notification_select ON birth_notifications;
+CREATE POLICY notification_select ON birth_notifications
+    FOR SELECT
+    USING (true);
+
+DROP POLICY IF EXISTS notification_insert ON birth_notifications;
+CREATE POLICY notification_insert ON birth_notifications
+    FOR INSERT
+    WITH CHECK (true);
+
+DROP POLICY IF EXISTS notification_update ON birth_notifications;
+CREATE POLICY notification_update ON birth_notifications
+    FOR UPDATE
     USING (true)
     WITH CHECK (true);
 
-DROP POLICY IF EXISTS allow_all_notifications ON birth_notifications;
-CREATE POLICY allow_all_notifications ON birth_notifications
-    FOR ALL
-    USING (true)
+-- سياسات جدول سير العمل
+DROP POLICY IF EXISTS workflow_select ON birth_workflow_logs;
+CREATE POLICY workflow_select ON birth_workflow_logs
+    FOR SELECT
+    USING (true);
+
+DROP POLICY IF EXISTS workflow_insert ON birth_workflow_logs;
+CREATE POLICY workflow_insert ON birth_workflow_logs
+    FOR INSERT
     WITH CHECK (true);
 
-DROP POLICY IF EXISTS allow_all_workflow ON birth_workflow_logs;
-CREATE POLICY allow_all_workflow ON birth_workflow_logs
-    FOR ALL
-    USING (true)
+-- سياسات جدول الإحصائيات
+DROP POLICY IF EXISTS stats_select ON daily_birth_stats;
+CREATE POLICY stats_select ON daily_birth_stats
+    FOR SELECT
+    USING (true);
+
+-- سياسات جدول محاولات الدخول
+DROP POLICY IF EXISTS login_attempts_select ON login_attempts;
+CREATE POLICY login_attempts_select ON login_attempts
+    FOR SELECT
+    USING (true);
+
+DROP POLICY IF EXISTS login_attempts_insert ON login_attempts;
+CREATE POLICY login_attempts_insert ON login_attempts
+    FOR INSERT
     WITH CHECK (true);
 
-DROP POLICY IF EXISTS allow_all_stats ON daily_birth_stats;
-CREATE POLICY allow_all_stats ON daily_birth_stats
-    FOR ALL
-    USING (true)
-    WITH CHECK (true);
+ALTER TABLE login_attempts ENABLE ROW LEVEL SECURITY;

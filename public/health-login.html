@@ -374,7 +374,7 @@
                     const response = await fetch(`${API_URL}/verify`, {
                         headers: {
                             'Authorization': `Bearer ${token}`,
-                            'X-User-Id': sessionStorage.getItem('admin_user_id')
+                            'X-User-Id': sessionStorage.getItem('admin_user_id') // ملاحظة: سيتم إهمال هذا الترويس قريباً
                         }
                     });
                     
@@ -401,14 +401,7 @@
             }
         })();
         
-        // ============================================
-        // مساعدة: عرض بيانات الدخول التجريبية (للاختبار)
-        // ============================================
-        console.log('📋 بيانات الدخول التجريبية:');
-        console.log('👩‍⚕️ قابلة: midwife1 / 123456');
-        console.log('🏥 موظف صحة: health1 / 123456');
-        console.log('📋 موظف أحوال: civil1 / 123456');
-        console.log('👑 مدير: admin1 / 123456');
+        // تم إزالة بيانات الدخول من وحدة التحكم لأسباب أمنية
     </script>
 </body>
 </html>

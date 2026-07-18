@@ -1,202 +1,132 @@
-// netlify/functions/birth-notification.js
-const { createClient } = require('@supabase/supabase-js');
-
-const supabaseUrl = process.env.SUPABASE_URL || 'https://xhqfiuecmodoefzxesof.supabase.co';
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhocWZpdWVjbW9kb2Vmenhlc29mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzMjQzMjAsImV4cCI6MjA5NzkwMDMyMH0.wTQU63rLayMAacfPd9IQIX5a4n-NChTIdDiRc22HWNM';
+const { getSupabase, authenticate, corsHeaders, handleOptions, error, success } = require('./_shared');
 
 exports.handler = async (event) => {
-    const headers = {
-        'Access-Control-Allow-Origin': '*',
-        'Content-Type': 'application/json'
-    };
+    const preflight = handleOptions(event);
+    if (preflight) return preflight;
 
-    if (event.httpMethod === 'OPTIONS') {
-        return {
-            statusCode: 204,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-User-Id'
-            }
-        };
-    }
+    const auth = await authenticate(event);
+    if (auth.error) return error(auth.status, auth.error);
 
-    const token = event.headers.authorization?.split(' ')[1];
-    if (!token) {
-        return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
-    }
+    const { user, session } = auth;
+    const supabase = getSupabase();
 
-    try {
-        const supabase = createClient(supabaseUrl, supabaseKey);
+    if (event.httpMethod === 'POST') {
+        const { birthId, printedBy } = JSON.parse(event.body);
 
-        // التحقق من الجلسة
-        const { data: session, error: sessionError } = await supabase
-            .from('admin_sessions')
-            .select('user_id')
-            .eq('token', token)
-            .gte('expires_at', new Date().toISOString())
+        if (!birthId) return error(400, 'birthId مطلوب');
+
+        const { data: birth, error: birthError } = await supabase
+            .from('births')
+            .select('*')
+            .eq('id', birthId)
             .single();
 
-        if (sessionError || !session) {
-            return { statusCode: 401, headers, body: JSON.stringify({ error: 'Invalid session' }) };
+        if (birthError || !birth) return error(404, 'المولود غير موجود');
+
+        const yearPart = new Date().getFullYear();
+
+        const { data: existingNotifs } = await supabase
+            .from('birth_notifications')
+            .select('notification_number')
+            .like('notification_number', `N-${yearPart}-%`)
+            .order('notification_number', { ascending: false })
+            .limit(1);
+
+        let nextNumber = 1;
+        if (existingNotifs && existingNotifs.length > 0) {
+            const lastNum = parseInt(existingNotifs[0].notification_number.split('-')[2]);
+            if (!isNaN(lastNum)) nextNumber = lastNum + 1;
         }
 
-        // POST - إنشاء إخطار طباعة
-        if (event.httpMethod === 'POST') {
-            const { birthId, printedBy } = JSON.parse(event.body);
-
-            if (!birthId) {
-                return { statusCode: 400, headers, body: JSON.stringify({ error: 'birthId مطلوب' }) };
-            }
-
-            // التحقق من وجود المولود
-            const { data: birth, error: birthError } = await supabase
-                .from('births')
-                .select('*')
-                .eq('id', birthId)
-                .single();
-
-            if (birthError || !birth) {
-                return { statusCode: 404, headers, body: JSON.stringify({ error: 'المولود غير موجود' }) };
-            }
-
-            // ===== توليد رقم الإخطار التلقائي (محسّن) =====
-            const yearPart = new Date().getFullYear();
-            
-            const { data: existingNotifs, error: notifFetchError } = await supabase
+        let notificationNumber = null;
+        let attempts = 0;
+        while (notificationNumber === null && attempts < 100) {
+            const paddedNumber = String(nextNumber).padStart(6, '0');
+            const testNumber = `N-${yearPart}-${paddedNumber}`;
+            const { data: check } = await supabase
                 .from('birth_notifications')
                 .select('notification_number')
-                .like('notification_number', `N-${yearPart}-%`)
-                .order('notification_number', { ascending: false })
-                .limit(1);
-
-            let nextNumber = 1;
-            if (existingNotifs && existingNotifs.length > 0) {
-                const lastNum = parseInt(existingNotifs[0].notification_number.split('-')[2]);
-                if (!isNaN(lastNum)) {
-                    nextNumber = lastNum + 1;
-                }
+                .eq('notification_number', testNumber)
+                .maybeSingle();
+            if (!check) {
+                notificationNumber = testNumber;
+            } else {
+                nextNumber++;
             }
-
-            let notificationNumber = null;
-            let attempts = 0;
-            const maxAttempts = 100;
-
-            while (notificationNumber === null && attempts < maxAttempts) {
-                const paddedNumber = String(nextNumber).padStart(6, '0');
-                const testNumber = `N-${yearPart}-${paddedNumber}`;
-                
-                const { data: check, error: checkError } = await supabase
-                    .from('birth_notifications')
-                    .select('notification_number')
-                    .eq('notification_number', testNumber)
-                    .maybeSingle();
-
-                if (!check) {
-                    notificationNumber = testNumber;
-                } else {
-                    nextNumber++;
-                }
-                attempts++;
-            }
-
-            if (!notificationNumber) {
-                notificationNumber = `N-${yearPart}-${String(Date.now()).slice(-6)}`;
-            }
-
-            // إنشاء سجل إخطار
-            const notificationData = {
-                birth_id: birthId,
-                notification_number: notificationNumber,
-                printed_by: printedBy || session.user_id,
-                printed_at: new Date().toISOString(),
-                midwife_signed: true,
-                hospital_director_signed: true,
-                notes: 'تم طباعة إخطار الولادة'
-            };
-
-            const { data: notification, error: insertError } = await supabase
-                .from('birth_notifications')
-                .insert(notificationData)
-                .select()
-                .single();
-
-            if (insertError) {
-                console.error('❌ خطأ في إنشاء الإخطار:', insertError);
-                return { statusCode: 500, headers, body: JSON.stringify({ error: insertError.message }) };
-            }
-
-            // تحديث حالة المولود إلى "printed"
-            await supabase
-                .from('births')
-                .update({ 
-                    status: 'printed',
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', birthId);
-
-            // تسجيل في سير العمل
-            await supabase
-                .from('birth_workflow_logs')
-                .insert({
-                    birth_id: birthId,
-                    stage: 'notification_printed',
-                    performed_by: session.user_id,
-                    performed_by_name: sessionStorage.getItem('admin_username') || 'موظف',
-                    performed_by_role: 'health_officer',
-                    details: 'تم طباعة إخطار الولادة',
-                    metadata: { notification_id: notification.id }
-                });
-
-            console.log('✅ تم إنشاء الإخطار:', notificationNumber);
-
-            return {
-                statusCode: 200,
-                headers,
-                body: JSON.stringify({
-                    success: true,
-                    message: 'تم إنشاء إخطار الطباعة بنجاح',
-                    notification: notification,
-                    birth: birth
-                })
-            };
+            attempts++;
         }
 
-        // GET - جلب إخطار معين
-        if (event.httpMethod === 'GET') {
-            const birthId = event.queryStringParameters?.birthId;
-
-            if (!birthId) {
-                return { statusCode: 400, headers, body: JSON.stringify({ error: 'birthId مطلوب' }) };
-            }
-
-            const { data: notification, error } = await supabase
-                .from('birth_notifications')
-                .select('*, births(*)')
-                .eq('birth_id', birthId)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .single();
-
-            if (error && error.code !== 'PGRST116') {
-                return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
-            }
-
-            return {
-                statusCode: 200,
-                headers,
-                body: JSON.stringify(notification || null)
-            };
+        if (!notificationNumber) {
+            notificationNumber = `N-${yearPart}-${String(Date.now()).slice(-6)}`;
         }
 
-        return {
-            statusCode: 405,
-            headers,
-            body: JSON.stringify({ error: 'Method not allowed' })
+        const notificationData = {
+            birth_id: birthId,
+            notification_number: notificationNumber,
+            printed_by: printedBy || session.user_id,
+            printed_at: new Date().toISOString(),
+            midwife_signed: true,
+            hospital_director_signed: true,
+            notes: 'تم طباعة إخطار الولادة'
         };
 
-    } catch (error) {
-        console.error('❌ خطأ في birth-notification:', error);
-        return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
+        const { data: notification, error: insertError } = await supabase
+            .from('birth_notifications')
+            .insert(notificationData)
+            .select()
+            .single();
+
+        if (insertError) {
+            console.error('Notification insert error:', insertError);
+            return error(500, 'فشل إنشاء الإخطار');
+        }
+
+        await supabase
+            .from('births')
+            .update({
+                status: 'printed',
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', birthId);
+
+        await supabase
+            .from('birth_workflow_logs')
+            .insert({
+                birth_id: birthId,
+                stage: 'notification_printed',
+                performed_by: session.user_id,
+                performed_by_name: user.username,
+                performed_by_role: 'health_officer',
+                details: 'تم طباعة إخطار الولادة',
+                metadata: { notification_id: notification.id }
+            });
+
+        return success({
+            success: true,
+            message: 'تم إنشاء إخطار الطباعة بنجاح',
+            notification: notification,
+            birth: birth
+        });
     }
+
+    if (event.httpMethod === 'GET') {
+        const birthId = event.queryStringParameters?.birthId;
+        if (!birthId) return error(400, 'birthId مطلوب');
+
+        const { data: notification, error: fetchError } = await supabase
+            .from('birth_notifications')
+            .select('*, births(*)')
+            .eq('birth_id', birthId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+        if (fetchError && fetchError.code !== 'PGRST116') {
+            return error(500, 'خطأ في جلب الإخطار');
+        }
+
+        return success(notification || null);
+    }
+
+    return error(405, 'Method not allowed');
 };
