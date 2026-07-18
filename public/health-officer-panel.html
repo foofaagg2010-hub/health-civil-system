@@ -1,0 +1,1685 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة موظف الصحة - نظام الصحة والأحوال</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: #f0f2f5;
+            font-size: 14px;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #1a237e, #0d47a1);
+            color: white;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo i { font-size: 1.8rem; color: #64b5f6; }
+        .user-info { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .user-badge {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 18px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+        }
+        .role-badge {
+            background: #1565c0;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 22px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .logout-btn:hover { background: #c0392b; }
+        .container { max-width: 1200px; margin: 25px auto; padding: 0 20px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+        .page-header h2 { color: #1a237e; }
+        .page-header h2 i { color: #1565c0; margin-left: 10px; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            border-right: 4px solid #1565c0;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .stat-card .value { font-size: 28px; font-weight: 800; color: #1a237e; }
+        .stat-card .label { font-size: 12px; color: #888; margin-top: 5px; }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+        .tab-btn.active {
+            background: #1565c0;
+            color: white;
+        }
+        .tab-btn:hover { transform: translateY(-2px); }
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .form-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            margin-bottom: 30px;
+        }
+        .form-card h3 { margin-bottom: 20px; color: #1a237e; }
+        .form-card h3 i { color: #1565c0; margin-left: 10px; }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .form-group { margin-bottom: 5px; }
+        .form-group label { display: block; font-weight: 500; color: #2c3e50; margin-bottom: 5px; font-size: 13px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: #1565c0;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(21,101,192,0.1);
+        }
+        .form-full { grid-column: 1 / -1; }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #1565c0, #0d47a1);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(21,101,192,0.3); }
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #1e8449);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(39,174,96,0.3); }
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12, #d68910);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-warning:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(243,156,18,0.3); }
+        .btn-secondary {
+            background: #ecf0f1;
+            color: #2c3e50;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.3s;
+        }
+        .btn-secondary:hover { background: #d5d8dc; }
+        .btn-sm { padding: 6px 14px; font-size: 12px; }
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.3s;
+            font-size: 12px;
+        }
+        .btn-danger:hover { background: #c0392b; }
+        
+        .table-container { overflow-x: auto; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+        th, td { padding: 12px 15px; text-align: right; border-bottom: 1px solid #eee; }
+        th { background: #e3f2fd; font-weight: 700; color: #1a237e; }
+        tr:hover { background: #f8f9fa; }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-confirmed { background: #cce5ff; color: #004085; }
+        .status-printed { background: #d4edda; color: #155724; }
+        .status-notified { background: #d1ecf1; color: #0c5460; }
+        .status-certificate { background: #e8f5e9; color: #2e7d32; }
+        .status-rejected { background: #f8d7da; color: #721c24; }
+        .status-cancelled { background: #e9ecef; color: #6c757d; }
+        
+        .alert { padding: 15px; border-radius: 12px; margin-bottom: 20px; display: none; }
+        .alert-success { background: #d4edda; color: #155724; display: block; }
+        .alert-error { background: #f8d7da; color: #721c24; display: block; }
+        .alert-info { background: #cce5ff; color: #004085; display: block; }
+        
+        .badge-count {
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 8px;
+            font-size: 11px;
+            margin-right: 5px;
+        }
+        
+        .notification-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .notification-panel.active { display: flex; }
+        .notification-panel-content {
+            background: white;
+            border-radius: 24px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideDown 0.3s ease;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .notification-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e3f2fd;
+        }
+        .notification-panel-header h3 {
+            color: #1a237e;
+            font-size: 1.2rem;
+        }
+        .notification-panel-header h3 i { color: #1565c0; margin-left: 10px; }
+        .notification-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+            transition: 0.3s;
+        }
+        .notification-close:hover { color: #333; }
+        .notification-item {
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-right: 4px solid #1565c0;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        .notification-item:hover { background: #e3f2fd; }
+        .notification-item .time {
+            font-size: 11px;
+            color: #999;
+            display: block;
+            margin-top: 5px;
+        }
+        .notification-item .badge-new {
+            background: #e74c3c;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            margin-right: 8px;
+        }
+        .notification-item.read { opacity: 0.7; border-right-color: #bbb; }
+        .notification-item .title { font-weight: bold; color: #1a237e; }
+        .notification-empty {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+        .notification-empty i { font-size: 48px; display: block; margin-bottom: 15px; color: #ddd; }
+        
+        .notification-bell {
+            position: relative;
+            cursor: pointer;
+            font-size: 20px;
+            color: #ffd54f;
+            transition: 0.3s;
+        }
+        .notification-bell:hover { transform: scale(1.1); }
+        .notification-bell .badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 7px;
+            font-size: 10px;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .navbar { flex-direction: column; text-align: center; }
+            .user-info { justify-content: center; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .tabs { justify-content: center; }
+            .notification-panel-content { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">
+            <i class="fas fa-hospital"></i>
+            <div>
+                <h3 style="margin:0;">نظام ربط الصحة</h3>
+                <small style="opacity:0.7;">لوحة موظف الصحة</small>
+            </div>
+        </div>
+        <div class="user-info">
+            <div class="user-badge">
+                <i class="fas fa-user"></i>
+                <span id="adminName">مرحباً</span>
+                <span class="role-badge">موظف صحة</span>
+            </div>
+            <div class="user-badge">
+                <i class="fas fa-building"></i>
+                <span id="hospitalName">-</span>
+            </div>
+            <div class="user-badge">
+                <i class="fas fa-map-marker-alt"></i>
+                <span id="userBranch">-</span>
+            </div>
+            <div class="notification-bell" onclick="toggleNotifications()" title="الإشعارات">
+                <i class="fas fa-bell"></i>
+                <span class="badge" id="notifBadge" style="display:none;">0</span>
+            </div>
+            <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+        </div>
+    </div>
+    
+    <div class="notification-panel" id="notificationPanel">
+        <div class="notification-panel-content">
+            <div class="notification-panel-header">
+                <h3><i class="fas fa-bell"></i> الإشعارات</h3>
+                <button class="notification-close" onclick="toggleNotifications()">&times;</button>
+            </div>
+            <div id="notificationList">
+                <div class="notification-empty">
+                    <i class="fas fa-inbox"></i>
+                    <p>لا توجد إشعارات</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="page-header">
+            <h2><i class="fas fa-baby"></i> لوحة موظف الصحة</h2>
+            <div>
+                <span id="dateDisplay" style="color:#888;"></span>
+            </div>
+        </div>
+        
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card" onclick="showTab('pending')">
+                <div class="value" id="totalPending">0</div>
+                <div class="label">في انتظار المراجعة</div>
+            </div>
+            <div class="stat-card" style="border-right-color:#27ae60;" onclick="showTab('all')">
+                <div class="value" id="totalConfirmed">0</div>
+                <div class="label">تم التأكيد</div>
+            </div>
+            <div class="stat-card" style="border-right-color:#f39c12;" onclick="showTab('all')">
+                <div class="value" id="totalPrinted">0</div>
+                <div class="label">تم الطباعة</div>
+            </div>
+            <div class="stat-card" style="border-right-color:#8e44ad;" onclick="showTab('all')">
+                <div class="value" id="totalSent">0</div>
+                <div class="label">مرسل للأحوال</div>
+            </div>
+        </div>
+        
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
+            <button class="btn-primary" onclick="showTab('pending')"><i class="fas fa-clock"></i> طلبات واردة <span id="pendingBadge" class="badge-count">0</span></button>
+            <button class="btn-success" onclick="showTab('register')"><i class="fas fa-plus-circle"></i> تسجيل مولود</button>
+            <button class="btn-warning" onclick="showTab('all')"><i class="fas fa-list"></i> جميع المواليد</button>
+        </div>
+        
+        <div id="tabPending" class="tab-content active">
+            <div class="form-card">
+                <h3><i class="fas fa-inbox"></i> طلبات واردة من القابلات</h3>
+                <div id="pendingAlert" class="alert"></div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>رقم المولود</th>
+                                <th>اسم الأب</th>
+                                <th>اسم الأم</th>
+                                <th>النوع</th>
+                                <th>مكان الولادة</th>
+                                <th>تاريخ التسجيل</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pendingTableBody">
+                            <tr><td colspan="7" style="text-align:center;padding:30px;color:#888;">
+                                <i class="fas fa-spinner fa-pulse"></i> جاري التحميل...
+                            </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div id="tabRegister" class="tab-content">
+            <div class="form-card">
+                <h3><i class="fas fa-plus-circle"></i> تسجيل مولود جديد (ولادة في المستشفى)</h3>
+                <div id="registerAlert" class="alert"></div>
+                <form id="birthForm" onsubmit="registerBirth(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>نوع المولود <span style="color:red;">*</span></label>
+                            <select id="babyGender" required>
+                                <option value="">اختر...</option>
+                                <option value="ذكر">ذكر</option>
+                                <option value="أنثى">أنثى</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>اسم الأب <span style="color:red;">*</span></label>
+                            <input type="text" id="fatherName" placeholder="اسم الأب بالكامل" required>
+                        </div>
+                        <div class="form-group">
+                            <label>اسم الأم <span style="color:red;">*</span></label>
+                            <input type="text" id="motherName" placeholder="اسم الأم بالكامل" required>
+                        </div>
+                        <div class="form-group">
+                            <label>رقم هاتف الأم <span style="color:red;">*</span></label>
+                            <input type="tel" id="motherPhone" placeholder="مثال: 771234567" required>
+                        </div>
+                        <div class="form-group">
+                            <label>مكان الولادة <span style="color:red;">*</span></label>
+                            <input type="text" id="birthPlace" placeholder="المكان بالتفصيل" required>
+                        </div>
+                        <div class="form-group">
+                            <label>المحافظة</label>
+                            <input type="text" id="birthGovernorate" placeholder="المحافظة">
+                        </div>
+                        <div class="form-group">
+                            <label>المديرية</label>
+                            <input type="text" id="birthDistrict" placeholder="المديرية">
+                        </div>
+                        <div class="form-group">
+                            <label>تاريخ الولادة</label>
+                            <input type="date" id="birthDate">
+                        </div>
+                        <div class="form-group">
+                            <label>حالة الولادة <span style="color:red;">*</span></label>
+                            <select id="birthType" required>
+                                <option value="">اختر...</option>
+                                <option value="مفرد">مفرد</option>
+                                <option value="توأم">توأم</option>
+                                <option value="ثلاثة">ثلاثة</option>
+                                <option value="أكثر">أكثر</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>نوع الولادة</label>
+                            <select id="deliveryType">
+                                <option value="">اختر...</option>
+                                <option value="طبيعي">طبيعي</option>
+                                <option value="قيصري">قيصري</option>
+                                <option value="مساعدة">مساعدة</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>وزن الطفل (كجم)</label>
+                            <input type="number" id="babyWeight" step="0.1" placeholder="مثال: 3.2">
+                        </div>
+                        <div class="form-group">
+                            <label>حالة الطفل الصحية</label>
+                            <select id="healthStatus">
+                                <option value="جيد">جيد</option>
+                                <option value="يحتاج متابعة">يحتاج متابعة</option>
+                                <option value="حرج">حرج</option>
+                                <option value="حالة خاصة">حالة خاصة</option>
+                            </select>
+                        </div>
+                        <div id="twinFields" style="display:none;" class="form-full">
+                            <hr style="margin:15px 0;">
+                            <h4 style="color:#1a237e;margin-bottom:15px;"><i class="fas fa-baby"></i> بيانات التوأم</h4>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>نوع التوأم</label>
+                                    <select id="twinGender">
+                                        <option value="">اختر...</option>
+                                        <option value="ذكر">ذكر</option>
+                                        <option value="أنثى">أنثى</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>وزن التوأم (كجم)</label>
+                                    <input type="number" id="twinWeight" step="0.1" placeholder="مثال: 2.8">
+                                </div>
+                                <div class="form-group">
+                                    <label>حالة التوأم الصحية</label>
+                                    <select id="twinHealthStatus">
+                                        <option value="جيد">جيد</option>
+                                        <option value="يحتاج متابعة">يحتاج متابعة</option>
+                                        <option value="حرج">حرج</option>
+                                        <option value="حالة خاصة">حالة خاصة</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group form-full">
+                            <label>ملاحظات إضافية</label>
+                            <textarea id="notes" rows="2" placeholder="أي ملاحظات إضافية..."></textarea>
+                        </div>
+                    </div>
+                    <div style="margin-top:20px;display:flex;gap:15px;flex-wrap:wrap;">
+                        <button type="submit" class="btn-success" id="registerBtn">
+                            <i class="fas fa-save"></i> تسجيل وطباعة الإخطار
+                        </button>
+                        <button type="reset" class="btn-secondary">تفريغ النموذج</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div id="tabAll" class="tab-content">
+            <div class="form-card">
+                <h3><i class="fas fa-list"></i> جميع المواليد</h3>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px;">
+                    <input type="text" id="searchInput" placeholder="🔍 بحث بالاسم أو رقم المولود..." style="flex:1;padding:10px 16px;border:2px solid #e0e0e0;border-radius:12px;font-family:inherit;">
+                    <button class="btn-primary" onclick="searchBirths()"><i class="fas fa-search"></i> بحث</button>
+                    <button class="btn-secondary" onclick="resetSearch()"><i class="fas fa-undo"></i> عرض الكل</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>رقم المولود</th>
+                                <th>اسم الأب</th>
+                                <th>اسم الأم</th>
+                                <th>النوع</th>
+                                <th>الحالة</th>
+                                <th>المصدر</th>
+                                <th>تاريخ التسجيل</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allTableBody">
+                            <tr><td colspan="8" style="text-align:center;padding:30px;color:#888;">
+                                <i class="fas fa-spinner fa-pulse"></i> جاري التحميل...
+                            </td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="pagination" style="display:flex;justify-content:center;gap:8px;margin-top:20px;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ============================================
+        // الإعدادات الأساسية
+        // ============================================
+        const API_URL = '/.netlify/functions';
+        let currentUser = {};
+        let allBirths = [];
+        let currentPage = 1;
+        const PAGE_SIZE = 20;
+        let totalPages = 1;
+        
+        // ============================================
+        // نظام الإشعارات الداخلية
+        // ============================================
+        let notifications = [];
+        let notificationIdCounter = 0;
+        
+        function addNotification(title, message, type = 'info', link = null) {
+            const notif = {
+                id: ++notificationIdCounter,
+                title: title,
+                message: message,
+                type: type,
+                link: link,
+                time: new Date().toLocaleString('ar-EG'),
+                read: false,
+                createdAt: new Date().toISOString()
+            };
+            notifications.unshift(notif);
+            try {
+                localStorage.setItem('health_notifications', JSON.stringify(notifications));
+            } catch (e) {}
+            updateNotificationBadge();
+            if (document.getElementById('notificationPanel').classList.contains('active')) {
+                renderNotifications();
+            }
+            return notif;
+        }
+        
+        function updateNotificationBadge() {
+            const unread = notifications.filter(n => !n.read).length;
+            const badge = document.getElementById('notifBadge');
+            if (unread > 0) {
+                badge.style.display = 'inline';
+                badge.textContent = unread;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+        
+        function toggleNotifications() {
+            const panel = document.getElementById('notificationPanel');
+            panel.classList.toggle('active');
+            if (panel.classList.contains('active')) {
+                renderNotifications();
+                notifications.forEach(n => n.read = true);
+                updateNotificationBadge();
+                try {
+                    localStorage.setItem('health_notifications', JSON.stringify(notifications));
+                } catch (e) {}
+            }
+        }
+        
+        function renderNotifications() {
+            const container = document.getElementById('notificationList');
+            if (notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="notification-empty">
+                        <i class="fas fa-inbox"></i>
+                        <p>لا توجد إشعارات</p>
+                    </div>
+                `;
+                return;
+            }
+            container.innerHTML = notifications.map(n => `
+                <div class="notification-item ${n.read ? 'read' : ''}" onclick="handleNotificationClick(${n.id})">
+                    <div class="title">
+                        ${n.type === 'success' ? '✅' : n.type === 'warning' ? '⚠️' : n.type === 'danger' ? '❌' : '📌'}
+                        ${n.title}
+                        ${!n.read ? '<span class="badge-new">جديد</span>' : ''}
+                    </div>
+                    <div style="color:#555;font-size:13px;margin-top:3px;">${n.message}</div>
+                    <span class="time">${n.time}</span>
+                </div>
+            `).join('');
+        }
+        
+        function handleNotificationClick(id) {
+            const notif = notifications.find(n => n.id === id);
+            if (notif && notif.link) {
+                window.location.href = notif.link;
+            }
+        }
+        
+        function loadSavedNotifications() {
+            try {
+                const saved = localStorage.getItem('health_notifications');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        notifications = parsed;
+                        notificationIdCounter = Math.max(...parsed.map(n => n.id), 0);
+                        updateNotificationBadge();
+                    }
+                }
+            } catch (e) {}
+        }
+        
+        // ============================================
+        // التحقق من الجلسة
+        // ============================================
+        async function checkAuth() {
+            const token = sessionStorage.getItem('admin_token');
+            const loggedIn = sessionStorage.getItem('admin_logged_in');
+            if (!token || loggedIn !== 'true') {
+                window.location.href = 'health-login.html';
+                return false;
+            }
+            try {
+                const response = await fetch(`${API_URL}/verify`, {
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'X-User-Id': sessionStorage.getItem('admin_user_id')
+                    }
+                });
+                if (!response.ok) {
+                    sessionStorage.clear();
+                    window.location.href = 'health-login.html';
+                    return false;
+                }
+                const user = await response.json();
+                currentUser = user;
+                const roleType = user.role_type || user.role;
+                if (roleType !== 'health_officer' && roleType !== 'admin' && roleType !== 'supervisor') {
+                    alert('⚠️ هذا الحساب ليس لديه صلاحية موظف الصحة');
+                    window.location.href = 'health-login.html';
+                    return false;
+                }
+                document.getElementById('adminName').innerText = user.username;
+                document.getElementById('hospitalName').innerText = user.hospital_name || user.branch || 'مستشفى غير محدد';
+                document.getElementById('userBranch').innerText = user.branch_name || 'غير محدد';
+                return true;
+            } catch (err) {
+                console.error('Auth error:', err);
+                sessionStorage.clear();
+                window.location.href = 'health-login.html';
+                return false;
+            }
+        }
+        
+        // ============================================
+        // دوال مساعدة
+        // ============================================
+        function getStatusText(status) {
+            const map = {
+                'pending': 'في انتظار المراجعة',
+                'confirmed': 'تم التأكيد',
+                'printed': 'تم الطباعة',
+                'notified_civil': 'مرسل للأحوال',
+                'civil_received': 'استلمته الأحوال',
+                'certificate_issued': 'تم استخراج الشهادة',
+                'rejected': 'مرفوض',
+                'cancelled': 'ملغي'
+            };
+            return map[status] || status || 'غير محدد';
+        }
+        
+        function getSourceText(source) {
+            const map = {
+                'midwife': 'قابلة',
+                'health_officer': 'موظف صحة',
+                'hospital': 'مستشفى',
+                'home': 'منزل'
+            };
+            return map[source] || source || 'غير محدد';
+        }
+        
+        function formatDate(date) {
+            if (!date) return '---';
+            return new Date(date).toLocaleDateString('ar-EG');
+        }
+        
+        // ============================================
+        // تحميل الإحصائيات
+        // ============================================
+        async function loadStats() {
+            const token = sessionStorage.getItem('admin_token');
+            const userId = sessionStorage.getItem('admin_user_id');
+            try {
+                const response = await fetch(`${API_URL}/births?page=1&limit=1`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'X-User-Id': userId
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const births = data.births || [];
+                    const pending = births.filter(b => b.status === 'pending').length;
+                    const confirmed = births.filter(b => b.status === 'confirmed').length;
+                    const printed = births.filter(b => b.status === 'printed').length;
+                    const sent = births.filter(b => b.status === 'notified_civil' || b.status === 'civil_received').length;
+                    
+                    document.getElementById('totalPending').innerText = pending;
+                    document.getElementById('totalConfirmed').innerText = confirmed;
+                    document.getElementById('totalPrinted').innerText = printed;
+                    document.getElementById('totalSent').innerText = sent;
+                    document.getElementById('pendingBadge').innerText = pending;
+                }
+            } catch (err) {
+                console.error('Stats error:', err);
+            }
+        }
+        
+        // ============================================
+        // تحميل الطلبات الواردة
+        // ============================================
+        async function loadPending() {
+            const token = sessionStorage.getItem('admin_token');
+            const userId = sessionStorage.getItem('admin_user_id');
+            const tbody = document.getElementById('pendingTableBody');
+            const alertDiv = document.getElementById('pendingAlert');
+            
+            try {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#888;"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr>';
+                
+                const response = await fetch(`${API_URL}/births?page=1&limit=100&status=pending`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'X-User-Id': userId
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'فشل تحميل البيانات');
+                }
+                
+                const data = await response.json();
+                const births = data.births || [];
+                
+                console.log('📊 تم جلب الطلبات الواردة:', births.length);
+                
+                if (births.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#888;padding:40px;">📭 لا توجد طلبات واردة</td></tr>';
+                    alertDiv.style.display = 'none';
+                    return;
+                }
+                
+                tbody.innerHTML = births.map(b => `
+                    <tr>
+                        <td><strong>${b.birth_number || '---'}</strong></td>
+                        <td>${b.father_name || '---'}</td>
+                        <td>${b.mother_name || '---'}</td>
+                        <td>${b.baby_gender || '---'}</td>
+                        <td>${b.birth_place || '---'}</td>
+                        <td>${formatDate(b.created_at)}</td>
+                        <td>
+                            ${b.status === 'pending' ? `
+                            <button class="btn-success btn-sm" onclick="confirmBirth(${b.id}, '${b.birth_number}')">
+                                <i class="fas fa-check"></i> تأكيد
+                            </button>
+                            ` : `
+                            <span class="status-badge status-confirmed" style="font-size:11px;">✅ مؤكد</span>
+                            `}
+                            <button class="btn-primary btn-sm" onclick="printNotification(${b.id}, '${b.birth_number}')">
+                                <i class="fas fa-print"></i> طباعة
+                            </button>
+                            <button class="btn-secondary btn-sm" onclick="viewBirth('${b.birth_number}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+                
+                alertDiv.style.display = 'none';
+                
+            } catch (err) {
+                console.error('❌ خطأ في تحميل الطلبات الواردة:', err);
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:red;padding:30px;">❌ ${err.message}</td></tr>`;
+                alertDiv.className = 'alert alert-error';
+                alertDiv.innerHTML = `❌ فشل تحميل البيانات: ${err.message}`;
+                alertDiv.style.display = 'block';
+            }
+        }
+        
+        // ============================================
+        // تأكيد المولود
+        // ============================================
+        async function confirmBirth(birthId, birthNumber) {
+            if (!confirm(`✅ تأكيد المولود رقم ${birthNumber}؟`)) return;
+            const token = sessionStorage.getItem('admin_token');
+            const userId = sessionStorage.getItem('admin_user_id');
+            try {
+                const response = await fetch(`${API_URL}/births`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                        'X-User-Id': userId
+                    },
+                    body: JSON.stringify({
+                        birthId: birthId,
+                        status: 'confirmed',
+                        health_officer_id: parseInt(userId),
+                        branch_name: currentUser.branch_name
+                    })
+                });
+                if (!response.ok) throw new Error('Failed to confirm');
+                
+                addNotification(
+                    '✅ تم تأكيد المولود',
+                    `تم تأكيد المولود رقم ${birthNumber} بنجاح`,
+                    'success'
+                );
+                
+                alert('✅ تم تأكيد المولود بنجاح');
+                await loadPending();
+                await loadStats();
+                await loadAll();
+            } catch (err) {
+                alert('❌ خطأ: ' + err.message);
+            }
+        }
+        
+        // ============================================
+        // طباعة إخطار الولادة
+        // ============================================
+        async function printNotification(birthId, birthNumber) {
+            if (!confirm(`🖨️ هل تريد طباعة إخطار المولود رقم ${birthNumber}؟`)) return;
+            
+            const token = sessionStorage.getItem('admin_token');
+            const userId = sessionStorage.getItem('admin_user_id');
+            
+            const buttons = document.querySelectorAll('button');
+            let targetBtn = null;
+            for (const btn of buttons) {
+                if (btn.textContent.includes('طباعة') && btn.onclick) {
+                    const onclickStr = btn.onclick.toString();
+                    if (onclickStr.includes(birthId.toString())) {
+                        targetBtn = btn;
+                        break;
+                    }
+                }
+            }
+            
+            try {
+                if (targetBtn) {
+                    targetBtn.disabled = true;
+                    targetBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i>';
+                }
+                
+                // جلب بيانات المولود
+                const birthResponse = await fetch(`${API_URL}/births?page=1&limit=1&search=${birthNumber}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'X-User-Id': userId
+                    }
+                });
+                const birthData = await birthResponse.json();
+                const birth = birthData.births?.[0] || {};
+                
+                // إنشاء سجل إخطار (سيتم توليد الرقم تلقائياً)
+                const notifResponse = await fetch(`${API_URL}/birth-notification`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                        'X-User-Id': userId
+                    },
+                    body: JSON.stringify({
+                        birthId: birthId,
+                        printedBy: parseInt(userId)
+                    })
+                });
+                
+                if (!notifResponse.ok) {
+                    const errorData = await notifResponse.json();
+                    throw new Error(errorData.error || 'فشل إنشاء الإخطار');
+                }
+                
+                const notifData = await notifResponse.json();
+                const notification = notifData.notification || {};
+                
+                // فتح نافذة الطباعة
+                const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
+                if (!printWindow) {
+                    alert('⚠️ يرجى السماح للنوافذ المنبثقة للطباعة');
+                    return;
+                }
+                
+                printWindow.document.write(getPrintHTML(birth, notification));
+                printWindow.document.close();
+                printWindow.focus();
+                
+                setTimeout(() => {
+                    printWindow.print();
+                }, 800);
+                
+                addNotification(
+                    '🖨️ تم طباعة الإخطار',
+                    `تم طباعة إخطار المولود رقم ${birthNumber} بنجاح (رقم الإخطار: ${notification.notification_number || '---'})`,
+                    'success'
+                );
+                
+                setTimeout(async () => {
+                    await loadPending();
+                    await loadStats();
+                    await loadAll();
+                }, 1000);
+                
+            } catch (err) {
+                console.error('Print error:', err);
+                alert('❌ خطأ في الطباعة: ' + err.message);
+            } finally {
+                if (targetBtn) {
+                    targetBtn.disabled = false;
+                    targetBtn.innerHTML = '<i class="fas fa-print"></i> طباعة';
+                }
+            }
+        }
+        
+        // ============================================
+        // إنشاء HTML للطباعة - نسخة A4 محدثة
+        // ============================================
+        function getPrintHTML(birth, notification) {
+            const hospitalName = currentUser.hospital_name || 'مستشفى السلام العام';
+            const branchName = birth.branch_name || currentUser.branch_name || currentUser.branch || 'لحج - ردفان';
+            const today = new Date().toLocaleDateString('ar-EG', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            const notificationNumber = notification?.notification_number || birth.birth_number || '---';
+            
+            return `
+            <!DOCTYPE html>
+            <html dir="rtl">
+            <head>
+                <meta charset="UTF-8">
+                <title>إخطار ولادة - ${birth.birth_number || ''}</title>
+                <style>
+                    @page {
+                        size: A4;
+                        margin: 1.5cm 1.5cm 1.5cm 1.5cm;
+                    }
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body {
+                        font-family: 'Tajawal', 'Arial', sans-serif;
+                        font-size: 13px;
+                        line-height: 1.6;
+                        color: #1a1a2e;
+                        background: white;
+                        padding: 0;
+                    }
+                    
+                    .header-top {
+                        display: flex;
+                        justify-content: flex-end;
+                        margin-bottom: 10px;
+                        font-size: 12px;
+                        color: #555;
+                        border-bottom: none;
+                        padding-bottom: 0;
+                    }
+                    .header-top .date-label {
+                        font-weight: bold;
+                        color: #1a237e;
+                        margin-left: 5px;
+                    }
+                    
+                    .hospital-info {
+                        text-align: right;
+                        margin-bottom: 10px;
+                        border-bottom: 2px solid #1a237e;
+                        padding-bottom: 10px;
+                    }
+                    .hospital-info .ministry {
+                        font-size: 12px;
+                        color: #555;
+                        font-weight: bold;
+                    }
+                    .hospital-info .hospital-name {
+                        font-size: 16px;
+                        font-weight: bold;
+                        color: #1a237e;
+                    }
+                    .hospital-info .branch-name {
+                        font-size: 12px;
+                        color: #666;
+                    }
+                    
+                    .title-section {
+                        text-align: center;
+                        margin: 8px 0 12px 0;
+                    }
+                    .title-section h1 {
+                        font-size: 20px;
+                        color: #1a237e;
+                        letter-spacing: 2px;
+                        border-bottom: 1px solid #ddd;
+                        padding-bottom: 6px;
+                        display: inline-block;
+                    }
+                    
+                    .data-section {
+                        margin: 8px 0;
+                    }
+                    .data-section .section-title {
+                        font-weight: bold;
+                        color: #1a237e;
+                        font-size: 13px;
+                        border-bottom: 1px dashed #ccc;
+                        padding-bottom: 3px;
+                        margin-bottom: 6px;
+                    }
+                    .row {
+                        display: flex;
+                        padding: 3px 0;
+                        border-bottom: 1px dotted #eee;
+                    }
+                    .row .label {
+                        width: 130px;
+                        font-weight: bold;
+                        color: #333;
+                        flex-shrink: 0;
+                        font-size: 12px;
+                    }
+                    .row .value {
+                        flex: 1;
+                        padding-right: 10px;
+                        font-size: 13px;
+                    }
+                    .row .value .badge {
+                        display: inline-block;
+                        padding: 2px 10px;
+                        border-radius: 15px;
+                        font-size: 11px;
+                        font-weight: bold;
+                    }
+                    .badge-male { background: #e3f2fd; color: #0d47a1; }
+                    .badge-female { background: #fce4ec; color: #880e4f; }
+                    .badge-healthy { background: #e8f5e9; color: #2e7d32; }
+                    .badge-warning { background: #fff3e0; color: #e65100; }
+                    
+                    .twin-section {
+                        background: #f0f4ff;
+                        border-radius: 6px;
+                        padding: 8px 12px;
+                        margin-top: 6px;
+                        border-right: 3px solid #1a237e;
+                    }
+                    .twin-section .row {
+                        border-bottom: none;
+                        padding: 2px 0;
+                    }
+                    .twin-section .row .label {
+                        width: 110px;
+                        font-size: 11px;
+                    }
+                    
+                    .barcode-section {
+                        text-align: center;
+                        margin: 12px 0 8px 0;
+                        padding: 8px;
+                        background: #f8f9fa;
+                        border-radius: 6px;
+                        border: 1px dashed #ccc;
+                    }
+                    .barcode-section .barcode-text {
+                        font-family: 'Courier New', monospace;
+                        font-size: 18px;
+                        letter-spacing: 3px;
+                        color: #1a237e;
+                        font-weight: bold;
+                    }
+                    .barcode-section .barcode-label {
+                        font-size: 10px;
+                        color: #888;
+                        margin-top: 2px;
+                    }
+                    
+                    .signatures {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-top: 15px;
+                        padding-top: 12px;
+                        border-top: 2px solid #1a237e;
+                    }
+                    .signature-box {
+                        text-align: center;
+                        width: 45%;
+                    }
+                    .signature-box .line {
+                        border-bottom: 2px solid #333;
+                        width: 85%;
+                        margin: 20px auto 5px;
+                    }
+                    .signature-box .name {
+                        font-weight: bold;
+                        font-size: 13px;
+                    }
+                    .signature-box .title {
+                        color: #888;
+                        font-size: 11px;
+                    }
+                    
+                    .footer {
+                        text-align: center;
+                        margin-top: 12px;
+                        color: #aaa;
+                        font-size: 10px;
+                        border-top: 1px solid #eee;
+                        padding-top: 8px;
+                    }
+                    
+                    @media print {
+                        body { padding: 0; }
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="header-top">
+                    <div>
+                        <span class="date-label">التاريخ:</span>
+                        <span>${today}</span>
+                    </div>
+                </div>
+                
+                <div class="hospital-info">
+                    <div class="ministry">وزارة الصحة والسكان</div>
+                    <div class="hospital-name">${hospitalName}</div>
+                    <div class="branch-name">الفرع: ${branchName}</div>
+                </div>
+                
+                <div class="title-section">
+                    <h1>إخطار عن مولود</h1>
+                </div>
+                
+                <div class="data-section">
+                    <div class="section-title">📌 بيانات المولود</div>
+                    <div class="row">
+                        <span class="label">نوع المولود:</span>
+                        <span class="value">
+                            <span class="badge ${birth.baby_gender === 'ذكر' ? 'badge-male' : 'badge-female'}">
+                                ${birth.baby_gender || '---'}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="row">
+                        <span class="label">مكان الولادة:</span>
+                        <span class="value">${birth.birth_place || '---'}</span>
+                    </div>
+                    <div class="row">
+                        <span class="label">تاريخ الولادة:</span>
+                        <span class="value">${birth.birth_date ? new Date(birth.birth_date).toLocaleDateString('ar-EG') : '---'}</span>
+                    </div>
+                    <div class="row">
+                        <span class="label">حالة الولادة:</span>
+                        <span class="value">${birth.birth_type || '---'}</span>
+                    </div>
+                    <div class="row">
+                        <span class="label">نوع الولادة:</span>
+                        <span class="value">${birth.delivery_type || 'طبيعي'}</span>
+                    </div>
+                    <div class="row">
+                        <span class="label">وزن الطفل:</span>
+                        <span class="value">${birth.baby_weight ? birth.baby_weight + ' كجم' : '---'}</span>
+                    </div>
+                    <div class="row">
+                        <span class="label">الحالة الصحية:</span>
+                        <span class="value">
+                            <span class="badge ${birth.health_status === 'جيد' ? 'badge-healthy' : 'badge-warning'}">
+                                ${birth.health_status || 'جيد'}
+                            </span>
+                        </span>
+                    </div>
+                    ${birth.twin_baby_gender ? `
+                    <div class="twin-section">
+                        <div style="font-weight:bold;color:#1a237e;font-size:12px;margin-bottom:5px;">👶 بيانات التوأم</div>
+                        <div class="row"><span class="label">النوع:</span><span class="value">${birth.twin_baby_gender}</span></div>
+                        <div class="row"><span class="label">الوزن:</span><span class="value">${birth.twin_baby_weight ? birth.twin_baby_weight + ' كجم' : '---'}</span></div>
+                        <div class="row"><span class="label">الحالة الصحية:</span><span class="value">${birth.twin_health_status || 'جيد'}</span></div>
+                    </div>
+                    ` : ''}
+                </div>
+                
+                <div class="data-section">
+                    <div class="section-title">👨‍👩‍👧 بيانات الأبوين</div>
+                    <div class="row">
+                        <span class="label">اسم الأب:</span>
+                        <span class="value"><strong>${birth.father_name || '---'}</strong></span>
+                    </div>
+                    <div class="row">
+                        <span class="label">اسم الأم:</span>
+                        <span class="value"><strong>${birth.mother_name || '---'}</strong></span>
+                    </div>
+                    <div class="row">
+                        <span class="label">رقم هاتف الأم:</span>
+                        <span class="value" dir="ltr">${birth.mother_phone || '---'}</span>
+                    </div>
+                </div>
+                
+                <div class="barcode-section">
+                    <div class="barcode-text">* ${notificationNumber} *</div>
+                    <div class="barcode-label">رمز الاستعلام - رقم الإخطار: ${notificationNumber}</div>
+                </div>
+                
+                <div class="signatures">
+                    <div class="signature-box">
+                        <div class="line"></div>
+                        <div class="name">${birth.midwife_name || 'القابلة'}</div>
+                        <div class="title">توقيع القابلة</div>
+                    </div>
+                    <div class="signature-box">
+                        <div class="line"></div>
+                        <div class="name">${currentUser.username || 'مدير المستشفى'}</div>
+                        <div class="title">توقيع مدير المستشفى</div>
+                    </div>
+                </div>
+                
+                <div class="footer">
+                    <p>© 2026 نظام ربط الصحة بالأحوال المدنية - هذا الإخطار صادر من النظام الرسمي</p>
+                </div>
+                
+                <script>
+                    window.onload = function() {
+                        setTimeout(function() {
+                            window.print();
+                            window.close();
+                        }, 1000);
+                    };
+                <\/script>
+            </body>
+            </html>
+            `;
+        }
+        
+        // ============================================
+        // تسجيل مولود جديد
+        // ============================================
+        async function registerBirth(event) {
+            event.preventDefault();
+            const token = sessionStorage.getItem('admin_token');
+            const userId = sessionStorage.getItem('admin_user_id');
+            const btn = document.getElementById('registerBtn');
+            const alertDiv = document.getElementById('registerAlert');
+            
+            const data = {
+                baby_gender: document.getElementById('babyGender').value,
+                father_name: document.getElementById('fatherName').value.trim(),
+                mother_name: document.getElementById('motherName').value.trim(),
+                mother_phone: document.getElementById('motherPhone').value.trim(),
+                birth_place: document.getElementById('birthPlace').value.trim(),
+                birth_governorate: document.getElementById('birthGovernorate').value.trim() || currentUser.region,
+                birth_district: document.getElementById('birthDistrict').value.trim(),
+                birth_date: document.getElementById('birthDate').value || new Date().toISOString().split('T')[0],
+                birth_type: document.getElementById('birthType').value,
+                delivery_type: document.getElementById('deliveryType').value || 'طبيعي',
+                baby_weight: document.getElementById('babyWeight').value || null,
+                health_status: document.getElementById('healthStatus').value,
+                registration_note: document.getElementById('notes').value.trim(),
+                twin_baby_gender: document.getElementById('twinGender').value || null,
+                twin_baby_weight: document.getElementById('twinWeight').value || null,
+                twin_health_status: document.getElementById('twinHealthStatus').value || null
+            };
+            
+            const required = ['baby_gender', 'father_name', 'mother_name', 'mother_phone', 'birth_place', 'birth_type'];
+            for (const field of required) {
+                if (!data[field]) {
+                    alertDiv.className = 'alert alert-error';
+                    alertDiv.innerHTML = `❌ يرجى إدخال حقل ${field.replace('_', ' ')}`;
+                    alertDiv.style.display = 'block';
+                    return;
+                }
+            }
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> جاري التسجيل...';
+            
+            try {
+                const response = await fetch(`${API_URL}/health-register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                        'X-User-Id': userId
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'فشل التسجيل');
+                
+                alertDiv.className = 'alert alert-success';
+                alertDiv.innerHTML = `✅ تم تسجيل المولود بنجاح! رقم المولود: ${result.birth.birth_number}`;
+                alertDiv.style.display = 'block';
+                document.getElementById('birthForm').reset();
+                document.getElementById('twinFields').style.display = 'none';
+                
+                addNotification(
+                    '👶 تم تسجيل مولود جديد',
+                    `تم تسجيل المولود رقم ${result.birth.birth_number} في المستشفى`,
+                    'success',
+                    '#'
+                );
+                
+                if (result.birth && result.birth.id) {
+                    setTimeout(() => {
+                        printNotification(result.birth.id, result.birth.birth_number);
+                    }, 1000);
+                }
+                
+                await loadAll();
+                await loadStats();
+                await loadPending();
+                
+            } catch (err) {
+                alertDiv.className = 'alert alert-error';
+                alertDiv.innerHTML = `❌ ${err.message}`;
+                alertDiv.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> تسجيل وطباعة الإخطار';
+            }
+        }
+        
+        // ============================================
+        // تحميل جميع المواليد
+        // ============================================
+        async function loadAll(search = '') {
+            const token = sessionStorage.getItem('admin_token');
+            const userId = sessionStorage.getItem('admin_user_id');
+            const tbody = document.getElementById('allTableBody');
+            
+            try {
+                let url = `${API_URL}/births?page=${currentPage}&limit=${PAGE_SIZE}`;
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+                
+                console.log('📊 جلب جميع المواليد:', url);
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'X-User-Id': userId
+                    }
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'فشل تحميل البيانات');
+                }
+                
+                const data = await response.json();
+                allBirths = data.births || [];
+                totalPages = data.totalPages || 1;
+                
+                console.log('✅ تم جلب', allBirths.length, 'مولود');
+                
+                if (allBirths.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#888;padding:40px;">لا توجد مواليد مسجلة</td></tr>';
+                    document.getElementById('pagination').innerHTML = '';
+                    return;
+                }
+                
+                tbody.innerHTML = allBirths.map(b => `
+                    <tr>
+                        <td><strong>${b.birth_number || '---'}</strong></td>
+                        <td>${b.father_name || '---'}</td>
+                        <td>${b.mother_name || '---'}</td>
+                        <td>${b.baby_gender || '---'}</td>
+                        <td><span class="status-badge status-${b.status || 'pending'}">${getStatusText(b.status)}</span></td>
+                        <td>${getSourceText(b.registration_source)}</td>
+                        <td>${formatDate(b.created_at)}</td>
+                        <td>
+                            <button class="btn-secondary btn-sm" onclick="viewBirth('${b.birth_number}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ${b.status === 'notified_civil' || b.status === 'civil_received' ? `
+                            <span style="color:#27ae60;font-size:12px;">✅ تم الإرسال</span>
+                            ` : `
+                            <button class="btn-primary btn-sm" onclick="sendToCivil(${b.id}, '${b.birth_number}')">
+                                <i class="fas fa-paper-plane"></i> إرسال للأحوال
+                            </button>
+                            `}
+                            ${b.status === 'pending' ? `
+                            <button class="btn-success btn-sm" onclick="confirmBirth(${b.id}, '${b.birth_number}')">
+                                <i class="fas fa-check"></i> تأكيد
+                            </button>
+                            ` : ''}
+                        </td>
+                    </tr>
+                `).join('');
+                
+                renderPagination();
+                
+            } catch (err) {
+                console.error('❌ خطأ في تحميل جميع المواليد:', err);
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:red;padding:30px;">❌ ${err.message}</td></tr>`;
+            }
+        }
+        
+        function renderPagination() {
+            const container = document.getElementById('pagination');
+            if (totalPages <= 1) { container.innerHTML = ''; return; }
+            let html = '';
+            if (currentPage > 1) html += `<button class="btn-secondary btn-sm" onclick="goToPage(${currentPage-1})">السابق</button>`;
+            for (let i = Math.max(1, currentPage-2); i <= Math.min(totalPages, currentPage+2); i++) {
+                html += `<button class="${i === currentPage ? 'btn-primary' : 'btn-secondary'} btn-sm" onclick="goToPage(${i})">${i}</button>`;
+            }
+            if (currentPage < totalPages) html += `<button class="btn-secondary btn-sm" onclick="goToPage(${currentPage+1})">التالي</button>`;
+            container.innerHTML = html;
+        }
+        
+        function goToPage(page) {
+            currentPage = page;
+            loadAll(document.getElementById('searchInput').value.trim());
+        }
+        
+        function searchBirths() {
+            currentPage = 1;
+            loadAll(document.getElementById('searchInput').value.trim());
+        }
+        
+        function resetSearch() {
+            document.getElementById('searchInput').value = '';
+            currentPage = 1;
+            loadAll();
+        }
+        
+        // ============================================
+        // إرسال المولود إلى الأحوال المدنية
+        // ============================================
+        async function sendToCivil(birthId, birthNumber) {
+            if (!confirm(`📤 إرسال المولود رقم ${birthNumber} إلى الأحوال المدنية؟`)) return;
+            
+            const token = sessionStorage.getItem('admin_token');
+            const userId = sessionStorage.getItem('admin_user_id');
+            
+            try {
+                const response = await fetch(`${API_URL}/births`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                        'X-User-Id': userId
+                    },
+                    body: JSON.stringify({
+                        birthId: birthId,
+                        status: 'notified_civil',
+                        is_notified: true,
+                        notification_date: new Date().toISOString()
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to send');
+                
+                addNotification(
+                    '📤 تم إرسال المولود للأحوال',
+                    `تم إرسال المولود رقم ${birthNumber} إلى الأحوال المدنية`,
+                    'success',
+                    '#'
+                );
+                
+                alert('✅ تم إرسال المولود إلى الأحوال المدنية بنجاح');
+                await loadAll();
+                await loadStats();
+                await loadPending();
+                
+            } catch (err) {
+                alert('❌ خطأ: ' + err.message);
+            }
+        }
+        
+        // ============================================
+        // عرض تفاصيل المولود
+        // ============================================
+        function viewBirth(birthNumber) {
+            const birth = allBirths.find(b => b.birth_number === birthNumber);
+            if (birth) {
+                let details = `📋 تفاصيل المولود\n\n`;
+                details += `رقم المولود: ${birth.birth_number}\n`;
+                details += `اسم الأب: ${birth.father_name}\n`;
+                details += `اسم الأم: ${birth.mother_name}\n`;
+                details += `النوع: ${birth.baby_gender}\n`;
+                details += `مكان الولادة: ${birth.birth_place}\n`;
+                details += `الحالة: ${getStatusText(birth.status)}\n`;
+                details += `المصدر: ${getSourceText(birth.registration_source)}\n`;
+                details += `تاريخ التسجيل: ${formatDate(birth.created_at)}`;
+                if (birth.baby_weight) details += `\nالوزن: ${birth.baby_weight} كجم`;
+                if (birth.health_status) details += `\nالحالة الصحية: ${birth.health_status}`;
+                
+                alert(details);
+            } else {
+                alert('⚠️ المولود غير موجود');
+            }
+        }
+        
+        // ============================================
+        // تبديل التبويبات
+        // ============================================
+        function showTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            if (tab === 'pending') document.getElementById('tabPending').classList.add('active');
+            else if (tab === 'register') document.getElementById('tabRegister').classList.add('active');
+            else if (tab === 'all') { 
+                document.getElementById('tabAll').classList.add('active'); 
+                loadAll(); 
+            }
+        }
+        
+        // ============================================
+        // إظهار/إخفاء حقول التوأم
+        // ============================================
+        document.getElementById('birthType').addEventListener('change', function() {
+            const twinFields = document.getElementById('twinFields');
+            if (this.value === 'توأم' || this.value === 'ثلاثة' || this.value === 'أكثر') {
+                twinFields.style.display = 'block';
+            } else {
+                twinFields.style.display = 'none';
+            }
+        });
+        
+        // ============================================
+        // الخروج
+        // ============================================
+        function logout() {
+            if (confirm('هل تريد تسجيل الخروج؟')) {
+                sessionStorage.clear();
+                window.location.href = 'health-login.html';
+            }
+        }
+        
+        // ============================================
+        // التاريخ
+        // ============================================
+        document.getElementById('dateDisplay').innerHTML = 
+            new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        
+        // ============================================
+        // التهيئة
+        // ============================================
+        (async function init() {
+            loadSavedNotifications();
+            
+            if (await checkAuth()) {
+                await loadStats();
+                await loadPending();
+                await loadAll();
+                
+                if (notifications.length === 0) {
+                    addNotification(
+                        '👋 مرحباً بك في النظام',
+                        'تم تسجيل الدخول بنجاح. يمكنك البدء في مراجعة الطلبات.',
+                        'info'
+                    );
+                }
+            }
+        })();
+    </script>
+</body>
+</html>

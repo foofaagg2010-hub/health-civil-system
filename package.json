@@ -1,0 +1,35 @@
+{
+  "name": "health-civil-system",
+  "version": "1.0.0",
+  "description": "نظام ربط الصحة بالأحوال المدنية",
+  "main": "index.js",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo 'Build complete'",
+    "start": "netlify dev --port 3000",
+    "serve": "node server.js",
+    "api": "netlify functions:serve --port 8888",
+    "local": "node server.js"
+  },
+  "keywords": [
+    "health",
+    "civil",
+    "birth",
+    "netlify",
+    "supabase"
+  ],
+  "author": "ABDULLAH",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.107.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.3",
+    "qrcode": "^1.5.3",
+    "uuid": "^14.0.0",
+    "web-push": "^3.6.7",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "netlify-cli": "^26.0.2"
+  }
+}

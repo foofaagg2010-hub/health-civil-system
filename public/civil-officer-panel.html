@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة الأحوال المدنية</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: #f0f2f5;
+            font-size: 14px;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #1a237e, #283593);
+            color: white;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .logo { display: flex; align-items: center; gap: 12px; }
+        .logo i { font-size: 1.8rem; color: #ffd54f; }
+        .user-info { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .user-badge {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 18px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .role-badge {
+            background: #ffd54f;
+            color: #1a237e;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 22px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .logout-btn:hover { background: #c0392b; }
+        .container { max-width: 1200px; margin: 25px auto; padding: 0 20px; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+        .page-header h2 { color: #1a237e; }
+        .page-header h2 i { color: #ffd54f; margin-left: 10px; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 18px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            border-right: 4px solid #1a237e;
+        }
+        .stat-card .value { font-size: 28px; font-weight: 800; color: #1a237e; }
+        .stat-card .label { font-size: 12px; color: #888; margin-top: 5px; }
+        
+        .filter-section {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+        .filter-btn {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.3s;
+            background: #e8eaf6;
+            color: #1a237e;
+        }
+        .filter-btn.active {
+            background: #1a237e;
+            color: white;
+        }
+        .filter-btn:hover { transform: translateY(-2px); }
+        
+        .table-container { overflow-x: auto; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+        th, td { padding: 12px 15px; text-align: right; border-bottom: 1px solid #eee; }
+        th { background: #e8eaf6; font-weight: 700; color: #1a237e; }
+        tr:hover { background: #f8f9fa; }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .status-pending { background: #fff3cd; color: #856404; }
+        .status-confirmed { background: #cce5ff; color: #004085; }
+        .status-printed { background: #d4edda; color: #155724; }
+        .status-notified { background: #d1ecf1; color: #0c5460; }
+        .status-certificate { background: #e8f5e9; color: #2e7d32; }
+        .status-received { background: #e3f2fd; color: #0d47a1; }
+        
+        .btn-primary {
+            background: #1a237e;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.3s;
+            font-size: 12px;
+        }
+        .btn-primary:hover { background: #0d47a1; }
+        .btn-success {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.3s;
+            font-size: 12px;
+        }
+        .btn-success:hover { background: #1e8449; }
+        .btn-secondary {
+            background: #ecf0f1;
+            color: #2c3e50;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: 0.3s;
+            font-size: 12px;
+        }
+        .btn-secondary:hover { background: #d5d8dc; }
+        
+        .search-box {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+            min-width: 200px;
+        }
+        .search-box input {
+            flex: 1;
+            padding: 10px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-family: inherit;
+        }
+        .search-box input:focus {
+            border-color: #1a237e;
+            outline: none;
+        }
+        
+        .badge-count {
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 8px;
+            font-size: 11px;
+            margin-right: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; text-align: center; }
+            .user-info { justify-content: center; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .filter-section { flex-direction: column; }
+            .search-box { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">
+            <i class="fas fa-id-card"></i>
+            <div>
+                <h3 style="margin:0;">نظام الأحوال المدنية</h3>
+                <small style="opacity:0.7;">لوحة موظف الأحوال</small>
+            </div>
+        </div>
+        <div class="user-info">
+            <div class="user-badge">
+                <i class="fas fa-user"></i>
+                <span id="adminName">مرحباً</span>
+                <span class="role-badge">أحوال مدنية</span>
+            </div>
+            <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> خروج</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="page-header">
+            <h2><i class="fas fa-baby"></i> متابعة المواليد</h2>
+            <div>
+                <span id="dateDisplay" style="color:#888;"></span>
+            </div>
+        </div>
+        
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="value" id="totalBirths">0</div>
+                <div class="label">إجمالي المواليد</div>
+            </div>
+            <div class="stat-card" style="border-right-color:#f39c12;">
+                <div class="value" id="pendingCount">0</div>
+                <div class="label">في انتظار الإجراء</div>
+            </div>
+            <div class="stat-card" style="border-right-color:#27ae60;">
+                <div class="value" id="issuedCount">0</div>
+                <div class="label">تم استخراج الشهادة</div>
+            </div>
+            <div class="stat-card" style="border-right-color:#e74c3c;">
+                <div class="value" id="notIssuedCount">0</div>
+                <div class="label">لم تستخرج الشهادة</div>
+            </div>
+        </div>
+        
+        <div class="filter-section">
+            <button class="filter-btn active" data-filter="all" onclick="filterBirths('all')">الكل</button>
+            <button class="filter-btn" data-filter="pending" onclick="filterBirths('pending')">في انتظار <span class="badge-count" id="filterPending">0</span></button>
+            <button class="filter-btn" data-filter="confirmed" onclick="filterBirths('confirmed')">مؤكد</button>
+            <button class="filter-btn" data-filter="printed" onclick="filterBirths('printed')">مطبوع</button>
+            <button class="filter-btn" data-filter="notified_civil" onclick="filterBirths('notified_civil')">مرسل للأحوال</button>
+            <button class="filter-btn" data-filter="civil_received" onclick="filterBirths('civil_received')">تم الاستلام</button>
+            <button class="filter-btn" data-filter="certificate_issued" onclick="filterBirths('certificate_issued')">تم استخراج الشهادة</button>
+            <button class="filter-btn" data-filter="not_issued" onclick="filterBirths('not_issued')">لم تستخرج <span class="badge-count" id="filterNotIssued">0</span></button>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 بحث بالاسم أو رقم المولود..." onkeyup="if(event.key==='Enter') searchBirths()">
+                <button class="btn-primary" onclick="searchBirths()"><i class="fas fa-search"></i></button>
+                <button class="btn-secondary" onclick="resetSearch()"><i class="fas fa-undo"></i></button>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>رقم المولود</th>
+                        <th>اسم الأب</th>
+                        <th>اسم الأم</th>
+                        <th>النوع</th>
+                        <th>الحالة</th>
+                        <th>المصدر</th>
+                        <th>تاريخ التسجيل</th>
+                        <th>إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="birthsTableBody">
+                    <tr><td colspan="8" style="text-align:center;padding:30px;color:#888;">
+                        <i class="fas fa-spinner fa-pulse"></i> جاري التحميل...
+                    </td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="pagination" style="display:flex;justify-content:center;gap:8px;margin-top:20px;"></div>
+    </div>
+    
+    <script>
+        const API_URL = '/.netlify/functions';
+        let currentUser = {};
+        let allBirths = [];
+        let currentPage = 1;
+        const PAGE_SIZE = 20;
+        let totalPages = 1;
+        let currentFilter = 'all';
+        
+        async function checkAuth() {
+            const token = sessionStorage.getItem('admin_token');
+            const loggedIn = sessionStorage.getItem('admin_logged_in');
+            if (!token || loggedIn !== 'true') {
+                window.location.href = 'health-login.html';
+                return false;
+            }
+            try {
+                const response = await fetch(`${API_URL}/verify`, {
+                    headers: { 
+                        'Authorization': `Bearer ${token}`,
+                        'X-User-Id': sessionStorage.getItem('admin_user_id')
+                    }
+                });
+                if (!response.ok) {
+                    sessionStorage.clear();
+                    window.location.href = 'health-login.html';
+                    return false;
+                }
+                const user = await response.json();
+                currentUser = user;
+                const roleType = user.role_type || user.role;
+                if (roleType !== 'civil_officer' && roleType !== 'admin') {
+                    alert('⚠️ هذا الحساب ليس لديه صلاحية موظف الأحوال');
+                    window.location.href = 'health-login.html';
+                    return false;
+                }
+                document.getElementById('adminName').innerText = user.username;
+                return true;
+            } catch (err) {
+                console.error('Auth error:', err);
+                sessionStorage.clear();
+                window.location.href = 'health-login.html';
+                return false;
+            }
+        }
+        
+        function getStatusText(status) {
+            const map = {
+                'pending': 'في انتظار المراجعة',
+                'confirmed': 'تم التأكيد',
+                'printed': 'تم الطباعة',
+                'notified_civil': 'مرسل للأحوال',
+                'civil_received': 'تم الاستلام',
+                'certificate_issued': 'تم استخراج الشهادة',
+                'rejected': 'مرفوض',
+                'cancelled': 'ملغي'
+            };
+            return map[status] || status || 'غير محدد';
+        }
+        
+        function getSourceText(source) {
+            const map = {
+                'midwife': 'قابلة',
+                'health_officer': 'موظف صحة',
+                'hospital': 'مستشفى',
+                'home': 'منزل'
+            };
+            return map[source] || source || 'غير محدد';
+        }
+        
+        function formatDate(date) {
+            if (!date) return '---';
+            return new Date(date).toLocaleDateString('ar-EG');
+        }
+        
+        async function loadStats() {
+            const token = sessionStorage.getItem('admin_token');
+            const userId = sessionStorage.getItem('admin_user_id');
+            try {
+                const response = await fetch(`${API_URL}/births?page=1&limit=1`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'X-User-Id': userId
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const births = data.births || [];
+                    const total = births.length;
+                    const pending = births.filter(b => b.status === 'pending' || b.status === 'confirmed' || b.status === 'printed').length;
+                    const issued = births.filter(b => b.status === 'certificate_issued').length;
+                    const notIssued = births.filter(b => b.status !== 'certificate_issued' && b.status !== 'rejected' && b.status !== 'cancelled').length;
+                    
+                    document.getElementById('totalBirths').innerText = total;
+                    document.getElementById('pendingCount').innerText = pending;
+                    document.getElementById('issuedCount').innerText = issued;
+                    document.getElementById('notIssuedCount').innerText = notIssued;
+                    document.getElementById('filterPending').innerText = pending;
+                    document.getElementById('filterNotIssued').innerText = notIssued;
+                }
+            } catch (err) {
+                console.error('Stats error:', err);
+            }
+        }
+        
+        async function loadBirths() {
+            const token = sessionStorage.getItem('admin_token');
+            const userId = sessionStorage.getItem('admin_user_id');
+            const tbody = document.getElementById('birthsTableBody');
+            
+            let statusFilter = '';
+            if (currentFilter === 'not_issued') {
+                statusFilter = 'pending,confirmed,printed,notified_civil,civil_received';
+            } else if (currentFilter !== 'all') {
+                statusFilter = currentFilter;
+            }
+            
+            try {
+                let url = `${API_URL}/births?page=${currentPage}&limit=${PAGE_SIZE}`;
+                if (statusFilter) url += `&status=${statusFilter}`;
+                const search = document.getElementById('searchInput').value.trim();
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'X-User-Id': userId
+                    }
+                });
+                if (!response.ok) throw new Error('Failed to load');
+                const data = await response.json();
+                allBirths = data.births || [];
+                totalPages = data.totalPages || 1;
+                
+                if (allBirths.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#888;">لا توجد مواليد</td></tr>';
+                    document.getElementById('pagination').innerHTML = '';
+                    return;
+                }
+                
+                tbody.innerHTML = allBirths.map(b => `
+                    <tr>
+                        <td><strong>${b.birth_number || '---'}</strong></td>
+                        <td>${b.father_name || '---'}</td>
+                        <td>${b.mother_name || '---'}</td>
+                        <td>${b.baby_gender || '---'}</td>
+                        <td><span class="status-badge status-${b.status || 'pending'}">${getStatusText(b.status)}</span></td>
+                        <td>${getSourceText(b.registration_source)}</td>
+                        <td>${formatDate(b.created_at)}</td>
+                        <td>
+                            <button class="btn-secondary" onclick="viewBirth('${b.birth_number}')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            ${b.status !== 'certificate_issued' ? `<button class="btn-success" onclick="markCertificateIssued(${b.id}, '${b.birth_number}')">
+                                <i class="fas fa-check-circle"></i> شهادة
+                            </button>` : `<span style="color:#27ae60;">✅</span>`}
+                        </td>
+                    </tr>
+                `).join('');
+                
+                renderPagination();
+            } catch (err) {
+                console.error('Load births error:', err);
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:red;">خطأ في تحميل البيانات</td></tr>';
+            }
+        }
+        
+        function renderPagination() {
+            const container = document.getElementById('pagination');
+            if (totalPages <= 1) { container.innerHTML = ''; return; }
+            let html = '';
+            if (currentPage > 1) html += `<button class="btn-secondary" onclick="goToPage(${currentPage-1})">السابق</button>`;
+            for (let i = Math.max(1, currentPage-2); i <= Math.min(totalPages, currentPage+2); i++) {
+                html += `<button class="btn-${i === currentPage ? 'primary' : 'secondary'}" onclick="goToPage(${i})">${i}</button>`;
+            }
+            if (currentPage < totalPages) html += `<button class="btn-secondary" onclick="goToPage(${currentPage+1})">التالي</button>`;
+            container.innerHTML = html;
+        }
+        
+        function goToPage(page) {
+            currentPage = page;
+            loadBirths();
+        }
+        
+        function filterBirths(filter) {
+            currentFilter = filter;
+            currentPage = 1;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.filter-btn[data-filter="${filter}"]`)?.classList.add('active');
+            loadBirths();
+        }
+        
+        function searchBirths() {
+            currentPage = 1;
+            loadBirths();
+        }
+        
+        function resetSearch() {
+            document.getElementById('searchInput').value = '';
+            currentPage = 1;
+            loadBirths();
+        }
+        
+        async function markCertificateIssued(birthId, birthNumber) {
+            const certificateNumber = prompt('📝 أدخل رقم الشهادة:');
+            if (!certificateNumber) return;
+            
+            if (!confirm(`✅ تأكيد استخراج شهادة ميلاد للمولود رقم ${birthNumber}؟`)) return;
+            
+            const token = sessionStorage.getItem('admin_token');
+            const userId = sessionStorage.getItem('admin_user_id');
+            
+            try {
+                const response = await fetch(`${API_URL}/births`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                        'X-User-Id': userId
+                    },
+                    body: JSON.stringify({
+                        birthId: birthId,
+                        status: 'certificate_issued',
+                        is_certificate_issued: true,
+                        certificate_issue_date: new Date().toISOString(),
+                        certificate_number: certificateNumber,
+                        civil_officer_id: parseInt(userId)
+                    })
+                });
+                if (!response.ok) throw new Error('Failed to update');
+                
+                alert('✅ تم تحديث حالة المولود - شهادة ميلاد مستخرجة');
+                await loadStats();
+                await loadBirths();
+            } catch (err) {
+                alert('❌ خطأ: ' + err.message);
+            }
+        }
+        
+        function viewBirth(birthNumber) {
+            const birth = allBirths.find(b => b.birth_number === birthNumber);
+            if (birth) {
+                alert(`📋 تفاصيل المولود\n\nرقم المولود: ${birth.birth_number}\nاسم الأب: ${birth.father_name}\nاسم الأم: ${birth.mother_name}\nالنوع: ${birth.baby_gender}\nمكان الولادة: ${birth.birth_place}\nالحالة: ${getStatusText(birth.status)}\nالمصدر: ${getSourceText(birth.registration_source)}`);
+            }
+        }
+        
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'health-login.html';
+        }
+        
+        document.getElementById('dateDisplay').innerHTML = 
+            new Date().toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        
+        (async function init() {
+            if (await checkAuth()) {
+                await loadStats();
+                await loadBirths();
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دخول النظام - الصحة والأحوال</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-container {
+            background: white;
+            padding: 45px;
+            border-radius: 32px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+            animation: fadeInUp 0.6s ease;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .login-header { text-align: center; margin-bottom: 30px; }
+        .login-header i { font-size: 60px; color: #3498db; margin-bottom: 15px; }
+        .login-header h2 { color: #2c3e50; font-size: 1.8rem; }
+        .login-header p { color: #666; font-size: 0.9rem; }
+        
+        .role-badges {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .role-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .role-badge.midwife { background: #e8f5e9; color: #2e7d32; }
+        .role-badge.health { background: #e3f2fd; color: #0d47a1; }
+        .role-badge.civil { background: #fff3e0; color: #e65100; }
+        .role-badge.admin { background: #fce4ec; color: #880e4f; }
+        
+        .input-group { margin-bottom: 20px; }
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2c3e50;
+            font-size: 14px;
+        }
+        .input-group label i { margin-left: 8px; color: #3498db; }
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 16px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: 0.3s;
+            background: #fafafa;
+        }
+        .input-group input:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52,152,219,0.1);
+            background: white;
+        }
+        .input-group input::placeholder {
+            color: #bbb;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(52,152,219,0.4);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-top: 15px;
+            display: none;
+            border-right: 4px solid #e74c3c;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-top: 15px;
+            display: none;
+            border-right: 4px solid #27ae60;
+        }
+        .info-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            color: #666;
+            border-right: 4px solid #3498db;
+        }
+        .info-box i { color: #3498db; margin-left: 8px; }
+        
+        .back-link {
+            display: block;
+            margin-top: 20px;
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+            text-align: center;
+            transition: 0.3s;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+            color: #2980b9;
+        }
+        
+        .footer-text {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 12px;
+            color: #bbb;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+        
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+            }
+            .login-header h2 { font-size: 1.4rem; }
+            .login-header i { font-size: 45px; }
+            .role-badges { gap: 5px; }
+            .role-badge { font-size: 10px; padding: 3px 10px; }
+            button { font-size: 16px; padding: 13px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <i class="fas fa-hospital-user"></i>
+            <h2>نظام ربط الصحة بالأحوال</h2>
+            <p>بوابة الدخول الموحدة</p>
+            <div class="role-badges">
+                <span class="role-badge midwife"><i class="fas fa-user-nurse"></i> قابلة</span>
+                <span class="role-badge health"><i class="fas fa-hospital"></i> صحة</span>
+                <span class="role-badge civil"><i class="fas fa-id-card"></i> أحوال</span>
+                <span class="role-badge admin"><i class="fas fa-crown"></i> مدير</span>
+            </div>
+        </div>
+        
+        <div class="info-box">
+            <i class="fas fa-info-circle"></i>
+            <strong>ملاحظة:</strong> اختر الحساب المناسب لدورك. سيتم توجيهك تلقائياً إلى لوحة التحكم الخاصة بك.
+        </div>
+        
+        <div class="input-group">
+            <label><i class="fas fa-user"></i> اسم المستخدم</label>
+            <input type="text" id="username" placeholder="أدخل اسم المستخدم" autocomplete="off" dir="ltr">
+        </div>
+        <div class="input-group">
+            <label><i class="fas fa-lock"></i> كلمة المرور</label>
+            <input type="password" id="password" placeholder="أدخل كلمة المرور" autocomplete="off" dir="ltr">
+        </div>
+        <button onclick="login()" id="loginBtn">
+            <i class="fas fa-sign-in-alt"></i> دخول
+        </button>
+        
+        <div id="errorMsg" class="error"></div>
+        <div id="successMsg" class="success"></div>
+        
+        <a href="index.html" class="back-link"><i class="fas fa-arrow-right"></i> العودة للرئيسية</a>
+        
+        <div class="footer-text">
+            <p>© 2026 نظام ربط الصحة بالأحوال المدنية</p>
+        </div>
+    </div>
+    
+    <script>
+        // ============================================
+        // API URL - Netlify Functions
+        // ============================================
+        const API_URL = '/.netlify/functions';
+        
+        // ============================================
+        // دالة تسجيل الدخول
+        // ============================================
+        async function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('errorMsg');
+            const successDiv = document.getElementById('successMsg');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            // إخفاء الرسائل السابقة
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+            
+            // التحقق من الحقول
+            if (!username) {
+                errorDiv.innerText = '❌ يرجى إدخال اسم المستخدم';
+                errorDiv.style.display = 'block';
+                document.getElementById('username').focus();
+                return;
+            }
+            
+            if (!password) {
+                errorDiv.innerText = '❌ يرجى إدخال كلمة المرور';
+                errorDiv.style.display = 'block';
+                document.getElementById('password').focus();
+                return;
+            }
+            
+            // تعطيل الزر أثناء المعالجة
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> جاري التحقق...';
+            
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'فشل تسجيل الدخول');
+                }
+                
+                // عرض رسالة نجاح
+                successDiv.innerText = '✅ جاري تحويلك إلى لوحة التحكم...';
+                successDiv.style.display = 'block';
+                
+                // ============================================
+                // حفظ بيانات الجلسة
+                // ============================================
+                sessionStorage.setItem('admin_token', data.token);
+                sessionStorage.setItem('admin_logged_in', 'true');
+                sessionStorage.setItem('admin_user_id', data.user.id);
+                sessionStorage.setItem('admin_username', data.user.username);
+                sessionStorage.setItem('admin_role', data.user.role);
+                sessionStorage.setItem('admin_role_type', data.user.role_type || data.user.role);
+                sessionStorage.setItem('admin_branch', data.user.branch || '');
+                sessionStorage.setItem('admin_can_edit', data.user.can_edit || false);
+                sessionStorage.setItem('admin_can_view_logs', data.user.can_view_logs || false);
+                sessionStorage.setItem('admin_can_view_users', data.user.can_view_users || false);
+                sessionStorage.setItem('admin_region', data.user.region || '');
+                sessionStorage.setItem('admin_hospital', data.user.hospital_name || '');
+                
+                console.log('✅ تم تسجيل الدخول بنجاح:', data.user.username);
+                console.log('🔑 الدور:', data.user.role_type || data.user.role);
+                
+                // ============================================
+                // توجيه المستخدم حسب الدور
+                // ============================================
+                const roleType = data.user.role_type || data.user.role;
+                let redirectUrl = 'dashboard.html';
+                
+                switch(roleType) {
+                    case 'midwife':
+                        redirectUrl = 'midwife-panel.html';
+                        break;
+                    case 'health_officer':
+                        redirectUrl = 'health-officer-panel.html';
+                        break;
+                    case 'civil_officer':
+                        redirectUrl = 'civil-officer-panel.html';
+                        break;
+                    case 'admin':
+                        redirectUrl = 'health-admin-panel.html';
+                        break;
+                    case 'supervisor':
+                        // إذا كان المشرف من النظام القديم
+                        if (data.user.branch && data.user.branch.includes('صحة')) {
+                            redirectUrl = 'health-officer-panel.html';
+                        } else if (data.user.branch && data.user.branch.includes('أحوال')) {
+                            redirectUrl = 'civil-officer-panel.html';
+                        } else {
+                            redirectUrl = 'admin-panel.html';
+                        }
+                        break;
+                    default:
+                        redirectUrl = 'admin-panel.html';
+                }
+                
+                console.log('📂 سيتم التوجيه إلى:', redirectUrl);
+                
+                // الانتظار ثانية ثم التوجيه
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 1200);
+                
+            } catch (err) {
+                console.error('❌ خطأ في تسجيل الدخول:', err);
+                errorDiv.innerText = `❌ ${err.message}`;
+                errorDiv.style.display = 'block';
+                
+                // إعادة تمكين الزر
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> دخول';
+            }
+        }
+        
+        // ============================================
+        // دعم الضغط على Enter
+        // ============================================
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                login();
+            }
+        });
+        
+        document.getElementById('username').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('password').focus();
+            }
+        });
+        
+        // ============================================
+        // التحقق من الجلسة الحالية (إذا كان مسجلاً)
+        // ============================================
+        (async function checkExistingSession() {
+            const token = sessionStorage.getItem('admin_token');
+            const loggedIn = sessionStorage.getItem('admin_logged_in');
+            
+            if (token && loggedIn === 'true') {
+                try {
+                    const response = await fetch(`${API_URL}/verify`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'X-User-Id': sessionStorage.getItem('admin_user_id')
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const user = await response.json();
+                        const roleType = user.role_type || user.role;
+                        let redirectUrl = 'dashboard.html';
+                        
+                        switch(roleType) {
+                            case 'midwife': redirectUrl = 'midwife-panel.html'; break;
+                            case 'health_officer': redirectUrl = 'health-officer-panel.html'; break;
+                            case 'civil_officer': redirectUrl = 'civil-officer-panel.html'; break;
+                            case 'admin': redirectUrl = 'health-admin-panel.html'; break;
+                            default: redirectUrl = 'admin-panel.html';
+                        }
+                        
+                        // إذا كانت الجلسة صالحة، التوجيه مباشرة
+                        window.location.href = redirectUrl;
+                    }
+                } catch (err) {
+                    // إذا فشل التحقق، نستمر في صفحة الدخول
+                    console.log('جلسة غير صالحة، يرجى تسجيل الدخول');
+                }
+            }
+        })();
+        
+        // ============================================
+        // مساعدة: عرض بيانات الدخول التجريبية (للاختبار)
+        // ============================================
+        console.log('📋 بيانات الدخول التجريبية:');
+        console.log('👩‍⚕️ قابلة: midwife1 / 123456');
+        console.log('🏥 موظف صحة: health1 / 123456');
+        console.log('📋 موظف أحوال: civil1 / 123456');
+        console.log('👑 مدير: admin1 / 123456');
+    </script>
+</body>
+</html>

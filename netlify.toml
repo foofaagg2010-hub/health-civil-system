@@ -1,0 +1,36 @@
+# netlify.toml
+
+[build]
+  command = "npm install"
+  functions = "netlify/functions"
+  publish = "public"
+
+[dev]
+  framework = "#static"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = [
+    "bcryptjs",
+    "jsonwebtoken",
+    "qrcode",
+    "web-push",
+    "xlsx",
+    "@supabase/supabase-js"
+  ]
+
+# Redirects
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Security Headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co https://*.netlify.app"
