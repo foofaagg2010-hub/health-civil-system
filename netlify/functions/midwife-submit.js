@@ -89,7 +89,8 @@ exports.handler = async (event) => {
             registration_source: 'midwife',
             registration_note: data.registration_note || '',
             created_by: session.user_id,
-            branch_name: user.branch_name || user.region || data.birth_governorate || ''
+            branch_name: user.branch_name || user.region || data.birth_governorate || '',
+            printed_count: 0
         };
 
         const { data: birth, error: insertError } = await supabase

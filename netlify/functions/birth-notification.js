@@ -1,4 +1,4 @@
-const { getSupabase, authenticate, corsHeaders, handleOptions, error, success } = require('./_shared');
+const { getSupabase, authenticate, handleOptions, error, success } = require('./_shared');
 
 exports.handler = async (event) => {
     const preflight = handleOptions(event);
@@ -11,19 +11,20 @@ exports.handler = async (event) => {
     const supabase = getSupabase();
 
     if (event.httpMethod === 'POST') {
-        const { birthId, printedBy } = JSON.parse(event.body);
+        const { birthId } = JSON.parse(event.body);
 
         if (!birthId) return error(400, 'birthId مطلوب');
 
         const { data: birth, error: birthError } = await supabase
             .from('births')
-            .select('*')
+            .select('*, printed_count')
             .eq('id', birthId)
             .single();
 
         if (birthError || !birth) return error(404, 'المولود غير موجود');
 
         const yearPart = new Date().getFullYear();
+        const newCount = (birth.printed_count || 0) + 1;
 
         const { data: existingNotifs } = await supabase
             .from('birth_notifications')
@@ -63,11 +64,11 @@ exports.handler = async (event) => {
         const notificationData = {
             birth_id: birthId,
             notification_number: notificationNumber,
-            printed_by: printedBy || session.user_id,
+            printed_by: session.user_id,
             printed_at: new Date().toISOString(),
             midwife_signed: true,
             hospital_director_signed: true,
-            notes: 'تم طباعة إخطار الولادة'
+            notes: `نسخة ${newCount}`
         };
 
         const { data: notification, error: insertError } = await supabase
@@ -85,6 +86,7 @@ exports.handler = async (event) => {
             .from('births')
             .update({
                 status: 'printed',
+                printed_count: newCount,
                 updated_at: new Date().toISOString()
             })
             .eq('id', birthId);
@@ -97,15 +99,16 @@ exports.handler = async (event) => {
                 performed_by: session.user_id,
                 performed_by_name: user.username,
                 performed_by_role: 'health_officer',
-                details: 'تم طباعة إخطار الولادة',
-                metadata: { notification_id: notification.id }
+                details: `تم طباعة إخطار الولادة (نسخة ${newCount})`,
+                metadata: { notification_id: notification.id, copy_number: newCount }
             });
 
         return success({
             success: true,
             message: 'تم إنشاء إخطار الطباعة بنجاح',
             notification: notification,
-            birth: birth
+            birth: { ...birth, printed_count: newCount },
+            copy_number: newCount
         });
     }
 

@@ -441,7 +441,30 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='births' AND column_name='branch_name') THEN
         ALTER TABLE births ADD COLUMN branch_name VARCHAR(200);
     END IF;
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='births' AND column_name='printed_count') THEN
+        ALTER TABLE births ADD COLUMN printed_count INTEGER DEFAULT 0;
+    END IF;
 END $$;
+
+
+-- ============================================
+-- 8.8 جدول سجل النشاطات العام
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS activity_logs (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    username VARCHAR(100),
+    action VARCHAR(50) NOT NULL,
+    details TEXT,
+    metadata JSONB,
+    ip_address VARCHAR(50),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_activity_logs_user_id ON activity_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_activity_logs_action ON activity_logs(action);
+CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON activity_logs(created_at);
 
 
 -- ============================================
@@ -552,6 +575,19 @@ DROP POLICY IF EXISTS stats_select ON daily_birth_stats;
 CREATE POLICY stats_select ON daily_birth_stats
     FOR SELECT
     USING (true);
+
+-- سياسات جدول سجل النشاطات
+DROP POLICY IF EXISTS activity_logs_select ON activity_logs;
+CREATE POLICY activity_logs_select ON activity_logs
+    FOR SELECT
+    USING (true);
+
+DROP POLICY IF EXISTS activity_logs_insert ON activity_logs;
+CREATE POLICY activity_logs_insert ON activity_logs
+    FOR INSERT
+    WITH CHECK (true);
+
+ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
 
 -- سياسات جدول محاولات الدخول
 DROP POLICY IF EXISTS login_attempts_select ON login_attempts;

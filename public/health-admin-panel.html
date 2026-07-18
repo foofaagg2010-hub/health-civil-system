@@ -282,6 +282,7 @@
             <button class="tab-btn" data-tab="births" onclick="showTab('births')"><i class="fas fa-baby"></i> جميع المواليد</button>
             <button class="tab-btn" data-tab="logs" onclick="showTab('logs')"><i class="fas fa-history"></i> سجل الحركة</button>
             <button class="tab-btn" data-tab="stats" onclick="showTab('stats')"><i class="fas fa-chart-bar"></i> إحصائيات</button>
+            <button class="tab-btn" data-tab="settings" onclick="showTab('settings')"><i class="fas fa-cog"></i> الإعدادات</button>
         </div>
         
         <!-- ===== لوحة المعلومات ===== -->
@@ -476,6 +477,34 @@
             </div>
         </div>
         
+        <!-- ===== الإعدادات ===== -->
+        <div id="tabSettings" class="tab-content">
+            <div class="form-card">
+                <h3><i class="fas fa-key"></i> تغيير كلمة المرور</h3>
+                <div id="passwordAlert" class="alert"></div>
+                <form onsubmit="changePassword(event)">
+                    <div class="form-grid">
+                        <div class="form-group form-full">
+                            <label>كلمة المرور الحالية <span style="color:red;">*</span></label>
+                            <input type="password" id="oldPassword" placeholder="كلمة المرور الحالية" required style="max-width:400px;">
+                        </div>
+                        <div class="form-group">
+                            <label>كلمة المرور الجديدة <span style="color:red;">*</span></label>
+                            <input type="password" id="newPassword" placeholder="كلمة المرور الجديدة" required minlength="6">
+                            <small class="hint">يجب أن تكون 6 أحرف على الأقل</small>
+                        </div>
+                        <div class="form-group">
+                            <label>تأكيد كلمة المرور الجديدة <span style="color:red;">*</span></label>
+                            <input type="password" id="confirmPassword" placeholder="تأكيد كلمة المرور" required minlength="6">
+                        </div>
+                    </div>
+                    <div style="margin-top:20px;">
+                        <button type="submit" class="btn-primary"><i class="fas fa-save"></i> حفظ كلمة المرور الجديدة</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- ===== إحصائيات ===== -->
         <div id="tabStats" class="tab-content">
             <div class="form-card">
@@ -823,67 +852,80 @@
         // ============================================
         // تحميل سجل الحركة
         // ============================================
+        function getActionStyle(action) {
+            const colors = {
+                'تسجيل الدخول': '#27ae60',
+                'تسجيل الخروج': '#e74c3c',
+                'تغيير كلمة المرور': '#f39c12'
+            };
+            const stageColors = {
+                'created_by_midwife': '#8e44ad',
+                'sent_to_health': '#3498db',
+                'reviewed_by_health': '#2ecc71',
+                'notification_printed': '#f39c12',
+                'sent_to_civil': '#e74c3c',
+                'received_by_civil': '#9b59b6',
+                'certificate_issued': '#27ae60'
+            };
+            return colors[action] || stageColors[action] || '#7f8c8d';
+        }
+
+        function getActionDisplay(action, type) {
+            if (type === 'activity') return action;
+            const map = {
+                'created_by_midwife': 'تسجيل مولود',
+                'sent_to_health': 'إرسال للصحة',
+                'reviewed_by_health': 'مراجعة صحية',
+                'notification_printed': 'طباعة إخطار',
+                'sent_to_civil': 'إرسال للأحوال',
+                'received_by_civil': 'استلام أحوال',
+                'certificate_issued': 'إصدار شهادة'
+            };
+            return map[action] || action;
+        }
+
         async function loadLogs() {
             const token = sessionStorage.getItem('admin_token');
-            const userId = sessionStorage.getItem('admin_user_id');
             const tbody = document.getElementById('logsTableBody');
             const search = document.getElementById('logSearchInput').value.trim();
-            
+
             try {
                 tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:30px;color:#888;"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr>';
-                
+
                 let url = `${API_URL}/logs`;
                 if (search) url += `?search=${encodeURIComponent(search)}`;
-                
+
                 const response = await fetch(url, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'X-User-Id': userId
-                    }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'فشل تحميل السجل');
-                }
-                
+
+                if (!response.ok) throw new Error('فشل تحميل السجل');
+
                 const logs = await response.json();
                 allLogs = logs || [];
-                
+
                 if (allLogs.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#888;padding:40px;">📭 لا توجد سجلات</td></tr>';
                     return;
                 }
-                
-                tbody.innerHTML = allLogs.map(log => `
+
+                tbody.innerHTML = allLogs.map(log => {
+                    const actionDisplay = getActionDisplay(log.action, log.type);
+                    const actionColor = getActionStyle(log.action);
+                    const typeIcon = log.type === 'activity' ? '<i class="fas fa-user" style="font-size:10px;margin-left:4px;"></i>' : '<i class="fas fa-baby" style="font-size:10px;margin-left:4px;"></i>';
+                    return `
                     <tr>
-                        <td><strong>${log.username || 'غير معروف'}</strong></td>
-                        <td><span style="display:inline-block;padding:4px 12px;border-radius:20px;background:${getActionColor(log.action)};color:white;font-size:12px;">${log.action || '---'}</span></td>
+                        <td><strong>${log.username || 'غير معروف'}</strong> ${typeIcon}</td>
+                        <td><span style="display:inline-block;padding:4px 12px;border-radius:20px;background:${actionColor};color:white;font-size:12px;">${actionDisplay}</span></td>
                         <td>${log.details || '---'}</td>
                         <td dir="ltr" style="text-align:left;">${formatDateTime(log.created_at)}</td>
-                    </tr>
-                `).join('');
-                
+                    </tr>`;
+                }).join('');
+
             } catch (err) {
-                console.error('❌ خطأ في تحميل السجل:', err);
+                console.error('Load logs error:', err);
                 tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:red;padding:30px;">❌ ${err.message}</td></tr>`;
             }
-        }
-        
-        function getActionColor(action) {
-            const colors = {
-                'تسجيل الدخول': '#27ae60',
-                'تسجيل الخروج': '#e74c3c',
-                'تحديث حالة الطلب': '#3498db',
-                'رفع ملف Excel': '#9b59b6',
-                'دمج البيانات': '#1abc9c',
-                'تسجيل مولود': '#2ecc71',
-                'طباعة إخطار': '#f39c12',
-                'إرسال للأحوال': '#8e44ad',
-                'تأكيد مولود': '#27ae60',
-                'إدارة المستخدمين': '#2980b9'
-            };
-            return colors[action] || '#7f8c8d';
         }
         
         // ============================================
@@ -1009,7 +1051,8 @@
                 'users': 'tabUsers',
                 'births': 'tabBirths',
                 'logs': 'tabLogs',
-                'stats': 'tabStats'
+                'stats': 'tabStats',
+                'settings': 'tabSettings'
             };
             
             document.getElementById(tabMap[tab]).classList.add('active');
@@ -1022,13 +1065,79 @@
         }
         
         // ============================================
+        // تغيير كلمة المرور
+        // ============================================
+        async function changePassword(event) {
+            event.preventDefault();
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const alertDiv = document.getElementById('passwordAlert');
+
+            if (!oldPassword || !newPassword || !confirmPassword) {
+                alertDiv.className = 'alert alert-error';
+                alertDiv.innerHTML = '❌ جميع الحقول مطلوبة';
+                alertDiv.style.display = 'block';
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                alertDiv.className = 'alert alert-error';
+                alertDiv.innerHTML = '❌ كلمة المرور الجديدة غير متطابقة';
+                alertDiv.style.display = 'block';
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                alertDiv.className = 'alert alert-error';
+                alertDiv.innerHTML = '❌ كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+                alertDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                const token = sessionStorage.getItem('admin_token');
+                const response = await fetch(`${API_URL}/change-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ old_password: oldPassword, new_password: newPassword })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) throw new Error(data.error || 'فشل تغيير كلمة المرور');
+
+                alertDiv.className = 'alert alert-success';
+                alertDiv.innerHTML = '✅ تم تغيير كلمة المرور بنجاح';
+                alertDiv.style.display = 'block';
+                document.getElementById('oldPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+
+            } catch (err) {
+                alertDiv.className = 'alert alert-error';
+                alertDiv.innerHTML = `❌ ${err.message}`;
+                alertDiv.style.display = 'block';
+            }
+        }
+
+        // ============================================
         // الخروج
         // ============================================
-        function logout() {
-            if (confirm('هل تريد تسجيل الخروج؟')) {
-                sessionStorage.clear();
-                window.location.href = 'health-login.html';
-            }
+        async function logout() {
+            if (!confirm('هل تريد تسجيل الخروج؟')) return;
+            const token = sessionStorage.getItem('admin_token');
+            try {
+                await fetch(`${API_URL}/logout`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+            } catch (e) {}
+            sessionStorage.clear();
+            window.location.href = 'health-login.html';
         }
         
         // ============================================

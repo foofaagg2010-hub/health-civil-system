@@ -1004,6 +1004,7 @@
                 
                 const notifData = await notifResponse.json();
                 const notification = notifData.notification || {};
+                const copyNumber = notifData.copy_number || 1;
                 
                 // فتح نافذة الطباعة
                 const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
@@ -1012,7 +1013,7 @@
                     return;
                 }
                 
-                printWindow.document.write(getPrintHTML(birth, notification));
+                printWindow.document.write(getPrintHTML(birth, notification, copyNumber));
                 printWindow.document.close();
                 printWindow.focus();
                 
@@ -1046,7 +1047,7 @@
         // ============================================
         // إنشاء HTML للطباعة - نسخة A4 محدثة
         // ============================================
-        function getPrintHTML(birth, notification) {
+        function getPrintHTML(birth, notification, copyNumber) {
             const hospitalName = currentUser.hospital_name || 'مستشفى السلام العام';
             const branchName = birth.branch_name || currentUser.branch_name || currentUser.branch || 'لحج - ردفان';
             const today = new Date().toLocaleDateString('ar-EG', { 
@@ -1054,7 +1055,8 @@
                 month: 'long', 
                 day: 'numeric' 
             });
-            const notificationNumber = notification?.notification_number || birth.birth_number || '---';
+            const notificationNumber = notification?.notification_number || '---';
+            const copyText = (copyNumber && copyNumber > 1) ? ` (نسخة ${copyNumber})` : '';
             
             return `
             <!DOCTYPE html>
@@ -1258,7 +1260,7 @@
                 </div>
                 
                 <div class="title-section">
-                    <h1>إخطار عن مولود</h1>
+                    <h1>إخطار عن مولود${copyText}</h1>
                 </div>
                 
                 <div class="data-section">
@@ -1322,6 +1324,18 @@
                     <div class="row">
                         <span class="label">رقم هاتف الأم:</span>
                         <span class="value" dir="ltr">${birth.mother_phone || '---'}</span>
+                    </div>
+                </div>
+                
+                <div class="data-section" style="margin-top:4px;">
+                    <div class="section-title">🔢 أرقام التتبع</div>
+                    <div class="row">
+                        <span class="label">رقم المولود:</span>
+                        <span class="value"><strong>${birth.birth_number || '---'}</strong></span>
+                    </div>
+                    <div class="row">
+                        <span class="label">رقم الإخطار:</span>
+                        <span class="value"><strong>${notificationNumber}</strong></span>
                     </div>
                 </div>
                 
@@ -1499,6 +1513,9 @@
                             <button class="btn-secondary btn-sm" onclick="viewBirth('${b.birth_number}')">
                                 <i class="fas fa-eye"></i>
                             </button>
+                            <button class="btn-primary btn-sm" onclick="printNotification(${b.id}, '${b.birth_number}')">
+                                <i class="fas fa-print"></i> طباعة
+                            </button>
                             ${b.status === 'notified_civil' || b.status === 'civil_received' ? `
                             <span style="color:#27ae60;font-size:12px;">✅ تم الإرسال</span>
                             ` : `
@@ -1647,11 +1664,17 @@
         // ============================================
         // الخروج
         // ============================================
-        function logout() {
-            if (confirm('هل تريد تسجيل الخروج؟')) {
-                sessionStorage.clear();
-                window.location.href = 'health-login.html';
-            }
+        async function logout() {
+            if (!confirm('هل تريد تسجيل الخروج؟')) return;
+            const token = sessionStorage.getItem('admin_token');
+            try {
+                await fetch(`${API_URL}/logout`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+            } catch (e) {}
+            sessionStorage.clear();
+            window.location.href = 'health-login.html';
         }
         
         // ============================================

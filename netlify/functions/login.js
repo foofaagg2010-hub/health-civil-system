@@ -96,6 +96,16 @@ exports.handler = async (event) => {
             .update({ last_login: new Date().toISOString() })
             .eq('id', user.id);
 
+        await supabase
+            .from('activity_logs')
+            .insert({
+                user_id: user.id,
+                username: user.username,
+                action: 'تسجيل الدخول',
+                details: `تسجيل دخول للمستخدم ${user.username}`,
+                ip_address: ip
+            });
+
         return success({
             success: true,
             token: sessionToken,
