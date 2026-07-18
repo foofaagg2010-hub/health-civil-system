@@ -138,7 +138,7 @@ exports.handler = async (event) => {
 
         if (insertError) {
             console.error('Birth insert error:', insertError);
-            return error(500, 'فشل تسجيل المولود: ' + insertError.message);
+            return error(500, 'فشل تسجيل المولود');
         }
 
         const notificationData = {

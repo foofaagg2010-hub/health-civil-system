@@ -433,6 +433,18 @@ CREATE INDEX IF NOT EXISTS idx_login_attempts_time ON login_attempts(attempted_a
 
 
 -- ============================================
+-- 8.7 ترحيل: إضافة أعمدة مفقودة للجداول الموجودة
+-- ============================================
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='births' AND column_name='branch_name') THEN
+        ALTER TABLE births ADD COLUMN branch_name VARCHAR(200);
+    END IF;
+END $$;
+
+
+-- ============================================
 -- 9. سياسات الأمان (RLS) - مبسطة
 -- ============================================
 
