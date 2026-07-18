@@ -100,7 +100,7 @@ exports.handler = async (event) => {
 
         if (insertError) {
             console.error('Midwife insert error:', insertError);
-            return error(500, 'فشل تسجيل المولود');
+            return error(500, 'فشل تسجيل المولود: ' + insertError.message);
         }
 
         await supabase
