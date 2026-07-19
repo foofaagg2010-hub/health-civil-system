@@ -271,6 +271,62 @@
             overflow-y: auto;
             animation: slideDown 0.3s ease;
         }
+        .task-section {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            margin-bottom: 20px;
+        }
+        .task-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e3f2fd;
+        }
+        .task-section-header h3 { color: #1a237e; font-size: 15px; }
+        .task-section-header h3 i { color: #1565c0; margin-left: 8px; }
+        .task-count {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        .task-cards { display: grid; gap: 12px; }
+        .task-card {
+            background: #f8f9fa;
+            border-radius: 14px;
+            padding: 15px;
+            border-right: 4px solid #1565c0;
+            transition: 0.3s;
+        }
+        .task-card:hover { background: #e3f2fd; transform: translateX(-2px); }
+        .task-card.sent { border-right-color: #27ae60; opacity: 0.85; }
+        .card-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .card-info { flex: 1; min-width: 200px; }
+        .card-info .name { font-weight: bold; color: #1a237e; font-size: 14px; }
+        .card-info .meta { font-size: 12px; color: #666; margin-top: 3px; line-height: 1.7; }
+        .card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .card-actions button { min-height: 36px; }
+        .search-bar {
+            display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;
+        }
+        .search-bar input {
+            flex: 1; min-width: 180px; padding: 10px 16px;
+            border: 2px solid #e0e0e0; border-radius: 12px; font-family: inherit;
+        }
+        .search-bar input:focus { border-color: #1565c0; outline: none; }
+        
         @keyframes slideDown {
             from { opacity: 0; transform: translateY(-30px); }
             to { opacity: 1; transform: translateY(0); }
@@ -361,7 +417,10 @@
             .user-info { justify-content: center; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .tabs { justify-content: center; }
+            .task-card .card-row { flex-direction: column; align-items: stretch; }
+            .task-card .card-actions button { flex: 1; }
             .notification-panel-content { padding: 20px; }
+            th, td { padding: 8px 10px; font-size: 12px; }
         }
     </style>
 </head>
@@ -420,53 +479,52 @@
         </div>
         
         <div class="stats-grid" id="statsGrid">
-            <div class="stat-card" onclick="showTab('pending')">
+            <div class="stat-card" onclick="showTab('tasks')" style="border-right-color:#f39c12;">
                 <div class="value" id="totalPending">0</div>
-                <div class="label">في انتظار المراجعة</div>
+                <div class="label">طلبات القابلات</div>
             </div>
-            <div class="stat-card" style="border-right-color:#27ae60;" onclick="showTab('all')">
-                <div class="value" id="totalConfirmed">0</div>
-                <div class="label">تم التأكيد</div>
+            <div class="stat-card" onclick="showTab('tasks')" style="border-right-color:#27ae60;">
+                <div class="value" id="totalReady">0</div>
+                <div class="label">جاهزة للطباعة</div>
             </div>
-            <div class="stat-card" style="border-right-color:#f39c12;" onclick="showTab('all')">
-                <div class="value" id="totalPrinted">0</div>
-                <div class="label">تم الطباعة</div>
-            </div>
-            <div class="stat-card" style="border-right-color:#8e44ad;" onclick="showTab('all')">
+            <div class="stat-card" onclick="showTab('tasks')" style="border-right-color:#8e44ad;">
                 <div class="value" id="totalSent">0</div>
                 <div class="label">مرسل للأحوال</div>
             </div>
         </div>
         
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
-            <button class="btn-primary" onclick="showTab('pending')"><i class="fas fa-clock"></i> طلبات واردة <span id="pendingBadge" class="badge-count">0</span></button>
-            <button class="btn-success" onclick="showTab('register')"><i class="fas fa-plus-circle"></i> تسجيل مولود</button>
-            <button class="btn-warning" onclick="showTab('all')"><i class="fas fa-list"></i> جميع المواليد</button>
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="tasks" onclick="showTab('tasks')"><i class="fas fa-tasks"></i> صندوق المهام <span id="taskBadge" class="badge-count">0</span></button>
+            <button class="tab-btn" data-tab="register" onclick="showTab('register')"><i class="fas fa-plus-circle"></i> تسجيل مولود</button>
+            <button class="tab-btn" data-tab="all" onclick="showTab('all')"><i class="fas fa-list"></i> كافة الطلبات</button>
         </div>
         
-        <div id="tabPending" class="tab-content active">
-            <div class="form-card">
-                <h3><i class="fas fa-inbox"></i> طلبات واردة من القابلات</h3>
-                <div id="pendingAlert" class="alert"></div>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>رقم المولود</th>
-                                <th>اسم الأب</th>
-                                <th>اسم الأم</th>
-                                <th>النوع</th>
-                                <th>مكان الولادة</th>
-                                <th>تاريخ التسجيل</th>
-                                <th>إجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pendingTableBody">
-                            <tr><td colspan="7" style="text-align:center;padding:30px;color:#888;">
-                                <i class="fas fa-spinner fa-pulse"></i> جاري التحميل...
-                            </td></tr>
-                        </tbody>
-                    </table>
+        <div id="tabTasks" class="tab-content active">
+            <div class="task-section">
+                <div class="task-section-header">
+                    <h3><i class="fas fa-user-friends"></i> طلبات القابلات</h3>
+                    <span class="task-count" id="midwifeCount">0</span>
+                </div>
+                <div id="midwifeTasks" class="task-cards">
+                    <div style="text-align:center;padding:30px;color:#888;"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</div>
+                </div>
+            </div>
+            <div class="task-section">
+                <div class="task-section-header">
+                    <h3><i class="fas fa-print"></i> جاهزة للطباعة والإرسال</h3>
+                    <span class="task-count" id="readyCount">0</span>
+                </div>
+                <div id="readyTasks" class="task-cards">
+                    <div style="text-align:center;padding:30px;color:#888;"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</div>
+                </div>
+            </div>
+            <div class="task-section" style="opacity:0.85;">
+                <div class="task-section-header">
+                    <h3><i class="fas fa-paper-plane"></i> مرسل للأحوال</h3>
+                    <span class="task-count" id="sentCount">0</span>
+                </div>
+                <div id="sentTasks" class="task-cards">
+                    <div style="text-align:center;padding:30px;color:#888;"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</div>
                 </div>
             </div>
         </div>
@@ -588,10 +646,10 @@
         </div>
         
         <div id="tabAll" class="tab-content">
-            <div class="form-card">
-                <h3><i class="fas fa-list"></i> جميع المواليد</h3>
-                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px;">
-                    <input type="text" id="searchInput" placeholder="🔍 بحث بالاسم أو رقم المولود..." style="flex:1;padding:10px 16px;border:2px solid #e0e0e0;border-radius:12px;font-family:inherit;">
+            <div class="task-section">
+                <h3 style="color:#1a237e;margin-bottom:15px;"><i class="fas fa-list"></i> كافة الطلبات</h3>
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="🔍 بحث بالاسم أو رقم المولود...">
                     <button class="btn-primary" onclick="searchBirths()"><i class="fas fa-search"></i> بحث</button>
                     <button class="btn-secondary" onclick="resetSearch()"><i class="fas fa-undo"></i> عرض الكل</button>
                 </div>
@@ -810,7 +868,7 @@
             const token = sessionStorage.getItem('admin_token');
             const userId = sessionStorage.getItem('admin_user_id');
             try {
-                const response = await fetch(`${API_URL}/births?page=1&limit=1`, {
+                const response = await fetch(`${API_URL}/births?page=1&limit=1000`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'X-User-Id': userId
@@ -819,16 +877,13 @@
                 if (response.ok) {
                     const data = await response.json();
                     const births = data.births || [];
-                    const pending = births.filter(b => b.status === 'pending').length;
-                    const confirmed = births.filter(b => b.status === 'confirmed').length;
-                    const printed = births.filter(b => b.status === 'printed').length;
+                    const pending = births.filter(b => b.registration_source === 'midwife' && b.status === 'pending').length;
+                    const ready = births.filter(b => b.status === 'confirmed' || b.status === 'printed').length;
                     const sent = births.filter(b => b.status === 'notified_civil' || b.status === 'civil_received').length;
                     
                     document.getElementById('totalPending').innerText = pending;
-                    document.getElementById('totalConfirmed').innerText = confirmed;
-                    document.getElementById('totalPrinted').innerText = printed;
+                    document.getElementById('totalReady').innerText = ready;
                     document.getElementById('totalSent').innerText = sent;
-                    document.getElementById('pendingBadge').innerText = pending;
                 }
             } catch (err) {
                 console.error('Stats error:', err);
@@ -836,75 +891,81 @@
         }
         
         // ============================================
-        // تحميل الطلبات الواردة
+        // تحميل صندوق المهام
         // ============================================
-        async function loadPending() {
+        async function loadTaskBox() {
             const token = sessionStorage.getItem('admin_token');
             const userId = sessionStorage.getItem('admin_user_id');
-            const tbody = document.getElementById('pendingTableBody');
-            const alertDiv = document.getElementById('pendingAlert');
-            
             try {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:30px;color:#888;"><i class="fas fa-spinner fa-pulse"></i> جاري التحميل...</td></tr>';
-                
-                const response = await fetch(`${API_URL}/births?page=1&limit=100&status=pending`, {
+                const response = await fetch(`${API_URL}/births?page=1&limit=200`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'X-User-Id': userId
                     }
                 });
-                
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'فشل تحميل البيانات');
-                }
-                
+                if (!response.ok) throw new Error('فشل تحميل البيانات');
                 const data = await response.json();
                 const births = data.births || [];
-                
-                console.log('📊 تم جلب الطلبات الواردة:', births.length);
-                
-                if (births.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#888;padding:40px;">📭 لا توجد طلبات واردة</td></tr>';
-                    alertDiv.style.display = 'none';
-                    return;
-                }
-                
-                tbody.innerHTML = births.map(b => `
-                    <tr>
-                        <td><strong>${b.birth_number || '---'}</strong></td>
-                        <td>${b.father_name || '---'}</td>
-                        <td>${b.mother_name || '---'}</td>
-                        <td>${b.baby_gender || '---'}</td>
-                        <td>${b.birth_place || '---'}</td>
-                        <td>${formatDate(b.created_at)}</td>
-                        <td>
-                            ${b.status === 'pending' ? `
-                            <button class="btn-success btn-sm" onclick="confirmBirth(${b.id}, '${b.birth_number}')">
-                                <i class="fas fa-check"></i> تأكيد
-                            </button>
-                            ` : `
-                            <span class="status-badge status-confirmed" style="font-size:11px;">✅ مؤكد</span>
-                            `}
-                            <button class="btn-primary btn-sm" onclick="printNotification(${b.id}, '${b.birth_number}')">
-                                <i class="fas fa-print"></i> طباعة
-                            </button>
-                            <button class="btn-secondary btn-sm" onclick="viewBirth('${b.birth_number}')">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `).join('');
-                
-                alertDiv.style.display = 'none';
-                
+
+                const midwifeBirths = births.filter(b => b.registration_source === 'midwife' && b.status === 'pending');
+                const readyBirths = births.filter(b => b.status === 'confirmed' || b.status === 'printed');
+                const sentBirths = births.filter(b => b.status === 'notified_civil' || b.status === 'civil_received');
+
+                document.getElementById('midwifeCount').innerText = midwifeBirths.length;
+                document.getElementById('readyCount').innerText = readyBirths.length;
+                document.getElementById('sentCount').innerText = sentBirths.length;
+                document.getElementById('taskBadge').innerText = midwifeBirths.length + readyBirths.length;
+
+                renderCards('midwifeTasks', midwifeBirths, 'midwife');
+                renderCards('readyTasks', readyBirths, 'ready');
+                renderCards('sentTasks', sentBirths, 'sent');
             } catch (err) {
-                console.error('❌ خطأ في تحميل الطلبات الواردة:', err);
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:red;padding:30px;">❌ ${err.message}</td></tr>`;
-                alertDiv.className = 'alert alert-error';
-                alertDiv.innerHTML = `❌ فشل تحميل البيانات: ${err.message}`;
-                alertDiv.style.display = 'block';
+                console.error('❌ خطأ في تحميل صندوق المهام:', err);
             }
+        }
+
+        function renderCards(containerId, births, type) {
+            const container = document.getElementById(containerId);
+            if (births.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:30px;color:#888;">📭 لا توجد طلبات</div>';
+                return;
+            }
+            container.innerHTML = births.map(b => {
+                let actions = '';
+                if (type === 'midwife') {
+                    actions = `
+                        <button class="btn-success btn-sm" onclick="confirmBirth(${b.id}, '${b.birth_number}')"><i class="fas fa-check"></i> تأكيد</button>
+                        <button class="btn-primary btn-sm" onclick="printNotification(${b.id}, '${b.birth_number}')"><i class="fas fa-print"></i> طباعة</button>
+                        <button class="btn-secondary btn-sm" onclick="viewBirth('${b.birth_number}')"><i class="fas fa-eye"></i></button>
+                    `;
+                } else if (type === 'ready') {
+                    actions = `
+                        <button class="btn-primary btn-sm" onclick="printNotification(${b.id}, '${b.birth_number}')"><i class="fas fa-print"></i> طباعة</button>
+                        <button class="btn-primary btn-sm" onclick="sendToCivil(${b.id}, '${b.birth_number}')"><i class="fas fa-paper-plane"></i> إرسال</button>
+                        <button class="btn-secondary btn-sm" onclick="viewBirth('${b.birth_number}')"><i class="fas fa-eye"></i></button>
+                    `;
+                } else if (type === 'sent') {
+                    actions = `
+                        <button class="btn-primary btn-sm" onclick="printNotification(${b.id}, '${b.birth_number}')"><i class="fas fa-print"></i> إعادة طباعة</button>
+                        <button class="btn-secondary btn-sm" onclick="viewBirth('${b.birth_number}')"><i class="fas fa-eye"></i></button>
+                    `;
+                }
+                return `
+                    <div class="task-card ${type === 'sent' ? 'sent' : ''}">
+                        <div class="card-row">
+                            <div class="card-info">
+                                <div class="name">${b.father_name || '---'} <span style="font-weight:normal;color:#888;">| ${b.birth_number || ''}</span></div>
+                                <div class="meta">
+                                    <i class="fas fa-female" style="color:#e91e63;"></i> ${b.mother_name || '---'}
+                                    · <i class="fas fa-calendar"></i> ${formatDate(b.created_at)}
+                                    ${type !== 'midwife' ? `<span class="status-badge status-${b.status}">${getStatusText(b.status)}</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="card-actions">${actions}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
         
         // ============================================
@@ -938,7 +999,7 @@
                 );
                 
                 alert('✅ تم تأكيد المولود بنجاح');
-                await loadPending();
+                await loadTaskBox();
                 await loadStats();
                 await loadAll();
             } catch (err) {
@@ -1028,7 +1089,7 @@
                 );
                 
                 setTimeout(async () => {
-                    await loadPending();
+                    await loadTaskBox();
                     await loadStats();
                     await loadAll();
                 }, 1000);
@@ -1450,7 +1511,7 @@
                 
                 await loadAll();
                 await loadStats();
-                await loadPending();
+                await loadTaskBox();
                 
             } catch (err) {
                 alertDiv.className = 'alert alert-error';
@@ -1605,7 +1666,7 @@
                 alert('✅ تم إرسال المولود إلى الأحوال المدنية بنجاح');
                 await loadAll();
                 await loadStats();
-                await loadPending();
+                await loadTaskBox();
                 
             } catch (err) {
                 alert('❌ خطأ: ' + err.message);
@@ -1641,11 +1702,16 @@
         // ============================================
         function showTab(tab) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            if (tab === 'pending') document.getElementById('tabPending').classList.add('active');
-            else if (tab === 'register') document.getElementById('tabRegister').classList.add('active');
-            else if (tab === 'all') { 
-                document.getElementById('tabAll').classList.add('active'); 
-                loadAll(); 
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
+            if (tab === 'tasks') {
+                document.getElementById('tabTasks').classList.add('active');
+                loadTaskBox();
+            } else if (tab === 'register') {
+                document.getElementById('tabRegister').classList.add('active');
+            } else if (tab === 'all') {
+                document.getElementById('tabAll').classList.add('active');
+                loadAll();
             }
         }
         
@@ -1691,7 +1757,7 @@
             
             if (await checkAuth()) {
                 await loadStats();
-                await loadPending();
+                await loadTaskBox();
                 await loadAll();
                 
                 if (notifications.length === 0) {
