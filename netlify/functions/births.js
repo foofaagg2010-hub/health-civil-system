@@ -53,8 +53,25 @@ exports.handler = async (event) => {
             return error(500, 'خطأ في جلب المواليد');
         }
 
+        // جلب أسماء المستخدمين المرتبطين (للتوقيع في التقارير)
+        let enrichedBirths = births || [];
+        if (enrichedBirths.length > 0) {
+            const userIds = new Set();
+            enrichedBirths.forEach(b => { if (b.midwife_id) userIds.add(b.midwife_id); if (b.health_officer_id) userIds.add(b.health_officer_id); });
+            if (userIds.size > 0) {
+                const { data: users } = await supabase.from('users').select('id, username').in('id', [...userIds]);
+                if (users) {
+                    enrichedBirths = enrichedBirths.map(b => ({
+                        ...b,
+                        midwife_name: users.find(u => u.id === b.midwife_id)?.username || null,
+                        health_officer_name: users.find(u => u.id === b.health_officer_id)?.username || null,
+                    }));
+                }
+            }
+        }
+
         return success({
-            births: births || [],
+            births: enrichedBirths,
             total: count || 0,
             page: page,
             totalPages: Math.ceil((count || 0) / limit),

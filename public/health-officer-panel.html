@@ -1067,20 +1067,23 @@
                 const notification = notifData.notification || {};
                 const copyNumber = notifData.copy_number || 1;
                 
-                // فتح نافذة الطباعة
-                const printWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
-                if (!printWindow) {
-                    alert('⚠️ يرجى السماح للنوافذ المنبثقة للطباعة');
-                    return;
-                }
-                
-                printWindow.document.write(getPrintHTML(birth, notification, copyNumber));
-                printWindow.document.close();
-                printWindow.focus();
-                
+                // طباعة عبر iframe مخفي (لا يحتاج نوافذ منبثقة)
+                const iframeId = 'printFrame_' + Date.now();
+                const iframe = document.createElement('iframe');
+                iframe.id = iframeId;
+                iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:800px;height:600px;';
+                document.body.appendChild(iframe);
+                const win = iframe.contentWindow;
+                const doc = win.document;
+                doc.open();
+                doc.write(getPrintHTML(birth, notification, copyNumber));
+                doc.close();
                 setTimeout(() => {
-                    printWindow.print();
-                }, 800);
+                    iframe.contentWindow.focus();
+                    setTimeout(() => {
+                        document.body.removeChild(iframe);
+                    }, 2000);
+                }, 200);
                 
                 addNotification(
                     '🖨️ تم طباعة الإخطار',
@@ -1408,12 +1411,12 @@
                 <div class="signatures">
                     <div class="signature-box">
                         <div class="line"></div>
-                        <div class="name">${birth.midwife_name || 'القابلة'}</div>
-                        <div class="title">توقيع القابلة</div>
+                        <div class="name">${birth.midwife_name || birth.health_officer_name || birth.father_name || '---'}</div>
+                        <div class="title">${birth.registration_source === 'midwife' ? 'توقيع القابلة' : 'توقيع موظف الصحة'}</div>
                     </div>
                     <div class="signature-box">
                         <div class="line"></div>
-                        <div class="name">${currentUser.username || 'مدير المستشفى'}</div>
+                        <div class="name">${currentUser?.username || 'مدير المستشفى'}</div>
                         <div class="title">توقيع مدير المستشفى</div>
                     </div>
                 </div>
@@ -1426,8 +1429,7 @@
                     window.onload = function() {
                         setTimeout(function() {
                             window.print();
-                            window.close();
-                        }, 1000);
+                        }, 500);
                     };
                 <\/script>
             </body>
