@@ -1131,7 +1131,7 @@
                 <style>
                     @page {
                         size: A4;
-                        margin: 1.5cm 1.5cm 1.5cm 1.5cm;
+                        margin: 0;
                     }
                     * { margin: 0; padding: 0; box-sizing: border-box; }
                     body {
@@ -1294,17 +1294,8 @@
                         font-size: 11px;
                     }
                     
-                    .footer {
-                        text-align: center;
-                        margin-top: 12px;
-                        color: #aaa;
-                        font-size: 10px;
-                        border-top: 1px solid #eee;
-                        padding-top: 8px;
-                    }
-                    
                     @media print {
-                        body { padding: 0; }
+                        body { padding: 20px; }
                         .no-print { display: none; }
                     }
                 </style>
