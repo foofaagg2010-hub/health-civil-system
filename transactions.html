@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'">
+    <title>المعاملات والخدمات - الأحوال المدنية</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .national-bar {
+            background: linear-gradient(90deg, #CE1126 0%, #CE1126 33%, #FFFFFF 33%, #FFFFFF 66%, #212122 66%, #212122 100%);
+            height: 6px;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #0f1a2e 0%, #1a2a4a 50%, #0f1a2e 100%);
+            color: white;
+            padding: 10px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 3px solid #C5A03A;
+        }
+
+        .logo { display: flex; align-items: center; gap: 14px; }
+        .logo-img { height: 48px; width: auto; object-fit: contain; background: rgba(255,255,255,0.05); border-radius: 4px; }
+        .logo-img-fallback { display: none; }
+        .logo-divider { width: 1px; height: 40px; background: rgba(255,255,255,0.2); }
+        .logo-text { line-height: 1.3; }
+        .logo-text h2 { font-size: 1.2rem; margin: 0; color: #f0f0f0; }
+        .logo-text p { font-size: 0.8rem; opacity: 0.8; margin: 2px 0 0; color: #C5A03A; }
+        .logo-text .sub-title { font-size: 0.7rem; opacity: 0.6; margin: 0; }
+
+        .back-btn {
+            background: rgba(255,255,255,0.12);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 10px 22px;
+            border-radius: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            backdrop-filter: blur(5px);
+        }
+
+        .back-btn:hover {
+            background: rgba(197,160,58,0.25);
+            border-color: #C5A03A;
+            transform: translateY(-2px);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .page-hero {
+            text-align: center;
+            color: white;
+            margin-bottom: 35px;
+            animation: fadeInUp 0.8s ease;
+            position: relative;
+        }
+
+        .page-hero h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .page-hero p {
+            font-size: 1rem;
+            opacity: 0.9;
+            line-height: 1.7;
+        }
+
+        .page-hero::after {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #C5A03A, transparent);
+            margin: 15px auto 0;
+            border-radius: 2px;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .transaction-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            animation: cardSlide 0.5s ease-out both;
+            border: 1px solid rgba(197,160,58,0.1);
+        }
+
+        .transaction-card:nth-child(2) { animation-delay: 0.1s; }
+        .transaction-card:nth-child(3) { animation-delay: 0.2s; }
+
+        @keyframes cardSlide {
+            0% { opacity: 0; transform: translateY(25px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .transaction-header {
+            background: linear-gradient(135deg, #1a2a4a, #2c4a7c);
+            color: white;
+            padding: 16px 22px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            transition: 0.3s;
+            user-select: none;
+        }
+
+        .transaction-header:hover {
+            background: linear-gradient(135deg, #2c4a7c, #1a2a4a);
+        }
+
+        .transaction-header .header-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(197,160,58,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .transaction-header .header-icon i { font-size: 1.2rem; color: #C5A03A; }
+        .transaction-header h3 { margin: 0; flex: 1; font-size: 1.1rem; }
+        .transaction-header .toggle-icon { font-size: 0.9rem; opacity: 0.7; transition: 0.3s; }
+        .transaction-header.active .toggle-icon { transform: rotate(180deg); }
+
+        .transaction-content {
+            padding: 0 22px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.3s ease;
+        }
+
+        .transaction-content.active {
+            padding: 22px;
+            max-height: 2500px;
+        }
+
+        .sub-option {
+            margin-bottom: 10px;
+        }
+
+        .sub-option-btn {
+            background: #f0f2f5;
+            color: #1a2a4a;
+            border: none;
+            padding: 13px 18px;
+            width: 100%;
+            text-align: right;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+            font-family: inherit;
+            font-weight: 500;
+            gap: 10px;
+        }
+
+        .sub-option-btn:hover {
+            background: #e2e6ea;
+        }
+
+        .sub-option-btn .btn-text {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sub-option-btn .btn-icon {
+            color: #999;
+            font-size: 0.8rem;
+            transition: 0.3s;
+            flex-shrink: 0;
+        }
+
+        .sub-option-btn .btn-icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        .whatsapp-option {
+            background-color: rgba(37, 211, 102, 0.08);
+            border: 1px dashed rgba(37, 211, 102, 0.3);
+        }
+
+        .whatsapp-option:hover {
+            background-color: rgba(37, 211, 102, 0.15);
+        }
+
+        .whatsapp-option .btn-icon { color: #25D366; font-size: 1.1rem; }
+
+        .requirements-list {
+            background: #f8f9fa;
+            padding: 16px 18px;
+            border-radius: 12px;
+            margin-top: 8px;
+            display: none;
+            border-right: 3px solid #C5A03A;
+            animation: fadeIn 0.25s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .requirements-list ol {
+            padding-right: 20px;
+            margin: 0;
+        }
+
+        .requirements-list li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+            font-size: 0.9rem;
+            color: #444;
+        }
+
+        .requirements-list li:last-child { margin-bottom: 0; }
+
+        .section-title {
+            color: #1a2a4a;
+            margin: 18px 0 10px 0;
+            padding-right: 12px;
+            border-right: 3px solid #C5A03A;
+            font-size: 1rem;
+        }
+
+        .whatsapp-btn {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            color: white;
+            border: none;
+            padding: 13px;
+            border-radius: 12px;
+            width: 100%;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+            font-weight: bold;
+            font-family: inherit;
+            text-decoration: none;
+        }
+
+        .whatsapp-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37,211,102,0.3);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px;
+            color: rgba(255,255,255,0.7);
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 0 14px; margin: 20px auto; }
+            .navbar { padding: 10px 14px; }
+            .logo { gap: 10px; }
+            .logo-img { height: 36px !important; }
+            .logo-divider { height: 30px; }
+            .logo-text h2 { font-size: 0.9rem; }
+            .logo-text p { font-size: 0.65rem; }
+            .logo-text .sub-title { font-size: 0.6rem; }
+            .back-btn { padding: 8px 16px; font-size: 0.8rem; }
+            .page-hero h1 { font-size: 1.5rem; }
+            .page-hero p { font-size: 0.85rem; }
+            .transaction-header { padding: 14px 16px; gap: 10px; }
+            .transaction-header .header-icon { width: 34px; height: 34px; }
+            .transaction-header .header-icon i { font-size: 1rem; }
+            .transaction-header h3 { font-size: 0.95rem; }
+            .transaction-content.active { padding: 16px; }
+            .sub-option-btn { padding: 11px 14px; font-size: 0.85rem; }
+            .requirements-list { padding: 12px 14px; }
+            .requirements-list li { font-size: 0.82rem; }
+            .section-title { font-size: 0.9rem; }
+            .whatsapp-btn { padding: 12px; font-size: 0.85rem; }
+        }
+
+        @media (max-width: 480px) {
+            .navbar { padding: 8px 10px; gap: 8px; }
+            .logo { gap: 6px; }
+            .logo-img { height: 28px !important; }
+            .logo-divider { height: 24px; }
+            .logo-text h2 { font-size: 0.75rem; }
+            .logo-text p { font-size: 0.55rem; }
+            .logo-text .sub-title { font-size: 0.5rem; }
+            .back-btn { padding: 6px 12px; font-size: 0.75rem; gap: 5px; }
+            .page-hero h1 { font-size: 1.2rem; }
+            .page-hero p { font-size: 0.8rem; }
+            .transaction-header { padding: 12px 14px; }
+            .transaction-header .header-icon { width: 30px; height: 30px; }
+            .transaction-header .header-icon i { font-size: 0.85rem; }
+            .transaction-header h3 { font-size: 0.85rem; }
+            .transaction-content.active { padding: 12px; }
+            .sub-option-btn { padding: 10px 12px; font-size: 0.8rem; border-radius: 10px; }
+            .requirements-list { padding: 10px 12px; }
+            .requirements-list li { font-size: 0.78rem; }
+            .section-title { font-size: 0.85rem; margin: 14px 0 8px; }
+            .whatsapp-btn { padding: 10px; font-size: 0.8rem; margin-top: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="national-bar"></div>
+
+    <div class="navbar">
+        <div class="logo">
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+                <img src="image.png" alt="الجمهورية اليمنية" class="logo-img" style="height:50px;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <div class="logo-img-fallback" style="display:none;width:50px;height:50px;background:rgba(255,255,255,0.1);border-radius:50%;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-flag" style="font-size:24px;color:#C5A03A;"></i></div>
+                <div class="logo-divider"></div>
+                <img src="images.png" alt="شعار الأحوال المدنية" class="logo-img" style="height:46px;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <div class="logo-img-fallback" style="display:none;width:46px;height:46px;background:rgba(255,255,255,0.1);border-radius:50%;align-items:center;justify-content:center;flex-shrink:0;"><i class="fas fa-id-card" style="font-size:22px;color:#C5A03A;"></i></div>
+                <div class="logo-divider"></div>
+            </div>
+            <div class="logo-text">
+                <h2>المعاملات والخدمات</h2>
+                <p>مصلحة الأحوال المدنية - فرع ردفان</p>
+                <div class="sub-title">الجمهورية اليمنية</div>
+            </div>
+        </div>
+        <a href="index.html" class="back-btn">
+            <i class="fas fa-arrow-right"></i> العودة
+        </a>
+    </div>
+
+    <div class="container">
+        <div class="page-hero">
+            <h1>المعاملات والخدمات</h1>
+            <p>تعرف على المستندات المطلوبة لاستخراج البطاقة الذكية والوثائق الرسمية</p>
+        </div>
+
+        <div class="transaction-card">
+            <div class="transaction-header" onclick="toggleTransaction('smart-card')">
+                <div class="header-icon"><i class="fas fa-id-card"></i></div>
+                <h3>البطاقة الذكية</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="transaction-content" id="smart-card">
+                <div class="sub-option">
+                    <button class="sub-option-btn" onclick="toggleRequirements('a-requirements')">
+                        <span class="btn-text">📌 أ- لدي بطاقة شخصية آلية من سابق</span>
+                        <i class="fas fa-chevron-down btn-icon"></i>
+                    </button>
+                    <div class="requirements-list" id="a-requirements">
+                        <ol>
+                            <li>تعبئة استمارة الحصول على البطاقة الالكترونية وتختيمها من الجهة الموضحة عليها</li>
+                            <li>صورة البطاقة مع احضار البطاقة الشخصية الآلية السابقة</li>
+                            <li>احضار اثنان شهود مع بطائقهم الشخصية</li>
+                            <li>احضار المؤهل العملي ان وجد</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="sub-option">
+                    <button class="sub-option-btn" onclick="toggleRequirements('b-requirements')">
+                        <span class="btn-text">📌 ب- لدي شهادة دراسية وزارية</span>
+                        <i class="fas fa-chevron-down btn-icon"></i>
+                    </button>
+                    <div class="requirements-list" id="b-requirements">
+                        <ol>
+                            <li>تعبئة استمارة الحصول على البطاقة الالكترونية وتختيمها من الجهة الموضحة عليها</li>
+                            <li>صورة للشهادة الدراسية مع احضار الأصل</li>
+                            <li>احضار اثنان شهود مع بطائقهم الشخصية</li>
+                            <li>بطاقة الأب أو الأخ</li>
+                            <li>تأكيد البيان الشخصي بالاسم والصورة مختم من قبل شيخ القبيلة أو عاقل الحارة</li>
+                            <li>فحص فصيلة الدم</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="sub-option">
+                    <button class="sub-option-btn" onclick="toggleRequirements('c-requirements')">
+                        <span class="btn-text">📌 ج- لدي شهادة ميلاد</span>
+                        <i class="fas fa-chevron-down btn-icon"></i>
+                    </button>
+                    <div class="requirements-list" id="c-requirements">
+                        <ol>
+                            <li>تعبئة استمارة الحصول على البطاقة الالكترونية وتختيمها من الجهة الموضحة عليها</li>
+                            <li>صورة لشهادة الميلاد مع احضار الأصل</li>
+                            <li>احضار اثنان شهود مع بطائقهم الشخصية</li>
+                            <li>بطاقة الأب أو الأخ</li>
+                            <li>تأكيد البيان الشخصي بالاسم والصورة مختم من قبل شيخ القبيلة أو عاقل الحارة</li>
+                            <li>فحص فصيلة الدم</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="sub-option">
+                    <button class="sub-option-btn" onclick="toggleRequirements('d-requirements')">
+                        <span class="btn-text">📌 د- لدي بطاقة عسكرية أو شخصية قديمة أو أي وثائق أخرى</span>
+                        <i class="fas fa-chevron-down btn-icon"></i>
+                    </button>
+                    <div class="requirements-list" id="d-requirements">
+                        <ol>
+                            <li>تعبئة استمارة الحصول على البطاقة الالكترونية وتختيمها من الجهة الموضحة عليها</li>
+                            <li>صورة للبطاقة أو الوثيقة مع احضار الأصل</li>
+                            <li>احضار اثنان شهود من الأقرباء مع بطائقهم الشخصية</li>
+                            <li>بطاقة الأب أو الأخ</li>
+                            <li>تأكيد البيان الشخصي بالاسم والصورة مختم من قبل شيخ القبيلة أو عاقل الحارة</li>
+                            <li>فحص فصيلة الدم إذا لم يتم تحديده في الوثائق السابقة</li>
+                            <li>تقرير تسنين طبي من مستشفى حكومي قريب لمنطقتك في حالة أن العمر ليس مناسب ويحدد من قبل فريق التحري لتحديد العمر</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="sub-option">
+                    <button class="sub-option-btn" onclick="toggleRequirements('e-requirements')">
+                        <span class="btn-text">📌 هـ- لدي جواز سفر فقط</span>
+                        <i class="fas fa-chevron-down btn-icon"></i>
+                    </button>
+                    <div class="requirements-list" id="e-requirements">
+                        <ol>
+                            <li>تعبئة استمارة الحصول على البطاقة الالكترونية وتختيمها من الجهة الموضحة عليها</li>
+                            <li>صورة للجواز مع احضار الأصل</li>
+                            <li>احضار اثنان شهود من الأقرباء مع بطائقهم الشخصية</li>
+                            <li>حيثيات صرف الجواز "الوثيقة التي تم بها استخراج جواز السفر"</li>
+                            <li>تأكيد البيان الشخصي بالاسم والصورة مختم من قبل شيخ القبيلة أو عاقل الحارة</li>
+                            <li>فحص فصيلة الدم إذا لم يتم تحديده في الوثائق السابقة</li>
+                            <li>احضار أي وثائق أخرى إن وجدت</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="sub-option">
+                    <button class="sub-option-btn" onclick="toggleRequirements('f-requirements')">
+                        <span class="btn-text">📌 و- للنساء لدي عقد زواج فقط</span>
+                        <i class="fas fa-chevron-down btn-icon"></i>
+                    </button>
+                    <div class="requirements-list" id="f-requirements">
+                        <ol>
+                            <li>تعبئة استمارة الحصول على البطاقة الالكترونية وتختيمها من الجهة الموضحة عليها</li>
+                            <li>صورة لعقد الزواج مع احضار الأصل</li>
+                            <li>احضار اثنان شهود من الأقرباء مع بطائقهم الشخصية</li>
+                            <li>بطاقة الأب أو الأخ وبطاقة الزوج</li>
+                            <li>تأكيد البيان الشخصي بالاسم والصورة مختم من قبل شيخ القبيلة أو عاقل الحارة</li>
+                            <li>فحص فصيلة الدم إذا لم يتم تحديده في الوثائق السابقة</li>
+                            <li>تقرير تسنين طبي من مستشفى حكومي قريب لمنطقتك في حالة أن العمر ليس مناسب ويحدد من قبل فريق التحري لتحديد العمر</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="sub-option">
+                    <button class="sub-option-btn whatsapp-option" onclick="contactAdmin('ز- مواليد خارج اليمن')">
+                        <span class="btn-text">📌 ز- مواليد خارج اليمن</span>
+                        <i class="fab fa-whatsapp btn-icon"></i>
+                    </button>
+                </div>
+
+                <div class="sub-option">
+                    <button class="sub-option-btn whatsapp-option" onclick="contactAdmin('ح- لا أحمل أي وثائق')">
+                        <span class="btn-text">📌 ح- لا أحمل أي وثائق</span>
+                        <i class="fab fa-whatsapp btn-icon"></i>
+                    </button>
+                </div>
+
+                <button class="whatsapp-btn" onclick="contactAdmin('استفسار عن البطاقة الذكية')">
+                    <i class="fab fa-whatsapp"></i> تواصل مع الإدارة لمعرفة المزيد
+                </button>
+            </div>
+        </div>
+
+        <div class="transaction-card">
+            <div class="transaction-header" onclick="toggleTransaction('national-qid')">
+                <div class="header-icon"><i class="fas fa-address-card"></i></div>
+                <h3>شهادة قيد برقم وطني ( للأطفال و القاصرين )</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="transaction-content" id="national-qid">
+                <h4 class="section-title">أولاً: أقل من 12 عام</h4>
+                <div class="requirements-list" style="display: block;">
+                    <ol>
+                        <li>البطاقة الالكترونية الشخصية للاب والام</li>
+                        <li>شهادة الميلاد للطفل</li>
+                    </ol>
+                </div>
+
+                <h4 class="section-title">ثانياً: أكبر من 12 وأقل من 16 عام</h4>
+                <div class="requirements-list" style="display: block;">
+                    <ol>
+                        <li>البطاقة الالكترونية الشخصية للاب والام</li>
+                        <li>شهادة الميلاد للطفل</li>
+                    </ol>
+                </div>
+
+                <button class="whatsapp-btn" onclick="contactAdmin('شهادة قيد برقم وطني')">
+                    <i class="fab fa-whatsapp"></i> الحصول على شهادة قيد برقم وطني
+                </button>
+            </div>
+        </div>
+
+        <div class="transaction-card">
+            <div class="transaction-header" onclick="toggleTransaction('birth-certificate')">
+                <div class="header-icon"><i class="fas fa-certificate"></i></div>
+                <h3>شهادة ميلاد الكتروني</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="transaction-content" id="birth-certificate">
+                <h4 class="section-title">📌 أولاً: أقل من عام فقط</h4>
+                <div class="requirements-list" style="display: block;">
+                    <ol>
+                        <li>البطاقة الشخصية الالكترونية للاب والام</li>
+                        <li>عقد الزواج</li>
+                        <li>تأكيد إخطار للمولود من المستشفى أو عاقل الحارة أو شيخ القبيلة</li>
+<li>تعبئة الاستمارة الخاصة للحصول على شهادة ميلاد جديد اقل من عام</li>
+                    </ol>
+                </div>
+
+                <h4 class="section-title">📌 ثانياً: أكبر من عام</h4>
+                <div class="requirements-list" style="display: block;">
+                    <ol>
+                        <li>البطاقة الالكترونية الشخصية للاب والام</li>
+<li>عقد الزواج</li>
+<li>تأكيد اخطار للمولود من المستشفى او عاقل الحارة او شيخ القبيلة</li>
+<li>تعبئة الاستمارة الخاصة للحوصل على قيد ميلاد متاخر اكثر من عام</li>
+<li>مقابلة لجنة متخصصة بالمواليد المتأخره تتضمن مدير الصحة ووكيل النيابة ومدير الاحوال المدنية والسجل المدني</li>
+                    </ol>
+                </div>
+
+                <button class="whatsapp-btn" onclick="contactAdmin('الحصول على شهادة ميلاد الكترونية')">
+                    <i class="fab fa-whatsapp"></i> الحصول على شهادة ميلاد الكترونية
+                </button>
+            </div>
+        </div>
+
+        <div class="transaction-card">
+            <div class="transaction-header" onclick="toggleTransaction('death-certificate')">
+                <div class="header-icon"><i class="fas fa-book"></i></div>
+                <h3>شهادة وفاة الكترونية</h3>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="transaction-content" id="death-certificate">
+                <div class="requirements-list" style="display: block;">
+                    <ol>
+                        <li>البطاقة الشخصية للمتوفي</li>
+                        <li>البطاقة الالكترونية الذكية للمبلغ عن الوفاة ويكون احد المقربين</li>
+                        <li>تاكيد عن حالة الوفاة مبين فيها سبب ونوع الوفاة ومكانها من المستشفى او شيخ القبيلة او عاقل الحارة</li>
+                    </ol>
+                </div>
+                <button class="whatsapp-btn" onclick="contactAdmin('شهادة وفاة الكترونية')">
+                    <i class="fab fa-whatsapp"></i> التواصل للاستفسار
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="footer">
+        <p>© 2025 الإدارة العامة للأحوال المدنية - جميع الحقوق محفوظة</p>
+    </div>
+
+    <script>
+        function toggleTransaction(id) {
+            const content = document.getElementById(id);
+            const header = content.previousElementSibling;
+            const isOpening = !content.classList.contains('active');
+
+            content.classList.toggle('active');
+            header.classList.toggle('active');
+
+            if (isOpening) {
+                const scrollY = header.getBoundingClientRect().top + window.scrollY - 90;
+                setTimeout(() => window.scrollTo({ top: scrollY, behavior: 'smooth' }), 300);
+            }
+        }
+
+        function toggleRequirements(id) {
+            const requirements = document.getElementById(id);
+            const btn = requirements.previousElementSibling;
+            const icon = btn.querySelector('.btn-icon');
+            const isOpening = requirements.style.display !== 'block';
+
+            requirements.style.display = isOpening ? 'block' : 'none';
+            if (icon) icon.classList.toggle('rotated', isOpening);
+        }
+
+        function contactAdmin(subject = '') {
+            const phoneNumber = "967771277759";
+            const message = subject ? `مرحباً، أريد الاستفسار عن: ${subject}` : "مرحباً، أريد الاستفسار عن معاملة";
+            const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+    </script>
+</body>
+</html>
