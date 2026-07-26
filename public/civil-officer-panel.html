@@ -204,6 +204,34 @@
             padding: 2px 8px; font-size: 11px; margin-right: 5px;
         }
 
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 9999;
+            display: none; align-items: center; justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-box {
+            background: white; border-radius: 20px; width: 90%; max-width: 450px;
+            max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideDown 0.3s ease;
+        }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 20px 25px; border-bottom: 2px solid #e8eaf6;
+        }
+        .modal-header h3 { color: #1a237e; font-size: 16px; }
+        .modal-header button {
+            background: none; border: none; font-size: 28px; cursor: pointer;
+            color: #999; transition: 0.3s; line-height: 1;
+        }
+        .modal-header button:hover { color: #333; }
+        .modal-body { padding: 20px 25px; line-height: 1.8; color: #333; font-size: 14px; }
+        .modal-footer {
+            padding: 15px 25px; display: flex; gap: 10px;
+            justify-content: center; border-top: 1px solid #eee;
+        }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        
         @media (max-width: 768px) {
             .navbar { flex-direction: column; text-align: center; }
             .user-info { justify-content: center; }
@@ -325,6 +353,17 @@
         </div>
     </div>
 
+    <div id="customModal" class="modal-overlay" style="display:none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modalTitle"></h3>
+                <button onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter"></div>
+        </div>
+    </div>
+
     <script>
         const API_URL = '/.netlify/functions';
         let currentUser = {};
@@ -356,8 +395,8 @@
                 currentUser = user;
                 const roleType = user.role_type || user.role;
                 if (roleType !== 'civil_officer' && roleType !== 'admin') {
-                    alert('⚠️ هذا الحساب ليس لديه صلاحية موظف الأحوال');
-                    window.location.href = 'health-login.html';
+                    showModal('⚠️ خطأ', 'هذا الحساب ليس لديه صلاحية موظف الأحوال');
+                    setTimeout(() => { window.location.href = 'health-login.html'; }, 2000);
                     return false;
                 }
                 document.getElementById('adminName').innerText = user.username;
@@ -447,9 +486,12 @@
         }
 
         async function enterCertificate(birthId, birthNumber) {
-            const certNumber = prompt('📝 أدخل الرقم التسلسلي للشهادة:');
-            if (!certNumber || !certNumber.trim()) return;
-            if (!confirm(`✅ إصدار شهادة ميلاد للمولود رقم ${birthNumber} برقم تسلسلي ${certNumber.trim()}؟`)) return;
+            const certNumber = await new Promise(r => inputModal('📝 إدخال الرقم التسلسلي', 'أدخل الرقم التسلسلي للشهادة:', r));
+            if (!certNumber) return;
+            const confirmed = await new Promise(resolve => {
+                showModal('تأكيد إصدار الشهادة', `✅ إصدار شهادة ميلاد للمولود رقم ${birthNumber} برقم تسلسلي ${certNumber.trim()}؟`, 'confirm', resolve);
+            });
+            if (!confirmed) return;
             const token = sessionStorage.getItem('admin_token');
             const userId = sessionStorage.getItem('admin_user_id');
             try {
@@ -470,12 +512,12 @@
                     })
                 });
                 if (!response.ok) throw new Error('فشل التحديث');
-                alert('✅ تم إصدار الشهادة بنجاح');
+                showModal('✅ نجاح', 'تم إصدار الشهادة بنجاح');
                 await loadTasks();
                 await loadAllBirths();
                 await loadStats();
             } catch (err) {
-                alert('❌ خطأ: ' + err.message);
+                showModal('❌ خطأ', err.message);
             }
         }
 
@@ -570,12 +612,59 @@
         function viewBirth(birthNumber) {
             const b = allBirths.find(x => x.birth_number === birthNumber);
             if (b) {
-                alert(`📋 تفاصيل المولود\n\nرقم: ${b.birth_number}\nالأب: ${b.father_name}\nالأم: ${b.mother_name}\nالنوع: ${b.baby_gender}\nالحالة: ${getStatusText(b.status)}\nرقم الشهادة: ${b.certificate_number || '---'}\nتاريخ التسجيل: ${formatDate(b.created_at)}`);
+                showModal('📋 تفاصيل المولود', `
+                    <div style="line-height:2;">
+                        <strong>رقم المولود:</strong> ${b.birth_number || '---'}<br>
+                        <strong>الأب:</strong> ${b.father_name || '---'}<br>
+                        <strong>الأم:</strong> ${b.mother_name || '---'}<br>
+                        <strong>رقم هاتف الأم:</strong> ${b.mother_phone || '---'}<br>
+                        <strong>النوع:</strong> ${b.baby_gender || '---'}<br>
+                        <strong>مكان الولادة:</strong> ${b.birth_place || '---'}<br>
+                        <strong>الحالة:</strong> ${getStatusText(b.status)}<br>
+                        <strong>رقم الشهادة:</strong> ${b.certificate_number || '---'}<br>
+                        <strong>تاريخ التسجيل:</strong> ${formatDate(b.created_at)}
+                    </div>
+                `);
             } else {
-                alert('⚠️ المولود غير موجود');
+                showModal('⚠️ تنبيه', 'المولود غير موجود');
             }
         }
 
+        function showModal(title, message, type, callback) {
+            document.getElementById('modalTitle').innerHTML = title;
+            document.getElementById('modalBody').innerHTML = message;
+            const footer = document.getElementById('modalFooter');
+            if (type === 'confirm') {
+                footer.innerHTML = '<button class="btn-success" onclick="confirmModal(true)"><i class="fas fa-check"></i> نعم</button><button class="btn-secondary" onclick="confirmModal(false)"><i class="fas fa-times"></i> لا</button>';
+                window._modalCallback = callback;
+            } else {
+                footer.innerHTML = '<button class="btn-primary" onclick="closeModal()"><i class="fas fa-check"></i> موافق</button>';
+            }
+            document.getElementById('customModal').style.display = 'flex';
+        }
+        function closeModal() { document.getElementById('customModal').style.display = 'none'; }
+        function confirmModal(result) { closeModal(); if (window._modalCallback) window._modalCallback(result); }
+        function inputModal(title, label, callback) {
+            document.getElementById('modalTitle').innerHTML = title;
+            document.getElementById('modalBody').innerHTML = `<label style="display:block;margin-bottom:8px;font-weight:600;">${label}</label><input type="text" id="modalInput" style="width:100%;padding:10px 14px;border:2px solid #e0e0e0;border-radius:10px;font-family:inherit;font-size:14px;box-sizing:border-box;" autofocus>`;
+            const footer = document.getElementById('modalFooter');
+            footer.innerHTML = '<button class="btn-success" onclick="inputModalDone()"><i class="fas fa-check"></i> تأكيد</button><button class="btn-secondary" onclick="closeModal();window._modalCallback(null)"><i class="fas fa-times"></i> إلغاء</button>';
+            document.getElementById('customModal').style.display = 'flex';
+            window._modalCallback = callback;
+            setTimeout(() => document.getElementById('modalInput')?.focus(), 100);
+        }
+        function inputModalDone() {
+            const val = document.getElementById('modalInput')?.value?.trim();
+            closeModal();
+            if (window._modalCallback) window._modalCallback(val || null);
+        }
+        // allow enter key to submit
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && document.getElementById('customModal').style.display === 'flex' && document.getElementById('modalInput')) {
+                inputModalDone();
+            }
+        });
+        
         function showTab(tab) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -593,7 +682,8 @@
         }
 
         async function logout() {
-            if (!confirm('هل تريد تسجيل الخروج؟')) return;
+            const confirmed = await new Promise(resolve => showModal('تأكيد الخروج', 'هل تريد تسجيل الخروج؟', 'confirm', resolve));
+            if (!confirmed) return;
             const token = sessionStorage.getItem('admin_token');
             try {
                 await fetch(`${API_URL}/logout`, {

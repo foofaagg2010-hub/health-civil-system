@@ -250,6 +250,16 @@
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .tabs { justify-content: center; }
         }
+        /* Modal */
+        .modal-overlay { position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:1000; }
+        .modal-box { background:#fff;border-radius:16px;padding:0;min-width:340px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:modalFadeIn 0.25s ease; }
+        @keyframes modalFadeIn { from { transform:scale(0.9);opacity:0; } to { transform:scale(1);opacity:1; } }
+        .modal-header-custom { display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid #eee;font-size:16px;font-weight:600; }
+        .modal-body-custom { padding:22px;line-height:1.7;font-size:14px; }
+        .modal-footer-custom { display:flex;gap:10px;justify-content:center;padding:14px 22px;border-top:1px solid #eee; }
+        .btn-sm { padding:6px 12px;font-size:12px; }
+        .btn-warning { background:#f39c12;color:#fff;border:none;padding:8px 16px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:14px;transition:all 0.2s; }
+        .btn-warning:hover { background:#e67e22; }
     </style>
 </head>
 <body>
@@ -435,6 +445,7 @@
                                 <th>المصدر</th>
                                 <th>الفرع</th>
                                 <th>تاريخ التسجيل</th>
+                                <th>إجراءات</th>
                             </tr>
                         </thead>
                         <tbody id="adminBirthsTableBody">
@@ -555,8 +566,8 @@
                 currentUser = user;
                 const roleType = user.role_type || user.role;
                 if (roleType !== 'admin') {
-                    alert('⚠️ هذا الحساب ليس لديه صلاحية المدير');
-                    window.location.href = 'health-login.html';
+                    showModal('⚠️ خطأ', 'هذا الحساب ليس لديه صلاحية المدير');
+                    setTimeout(() => { window.location.href = 'health-login.html'; }, 2000);
                     return false;
                 }
                 document.getElementById('adminName').innerText = user.username;
@@ -802,7 +813,8 @@
         // تبديل حالة المستخدم
         // ============================================
         async function toggleUser(id) {
-            if (!confirm('تغيير حالة المستخدم؟')) return;
+            const confirmed = await new Promise(r => showModal('تأكيد', 'تغيير حالة المستخدم؟', 'confirm', r));
+            if (!confirmed) return;
             const token = sessionStorage.getItem('admin_token');
             const userId = sessionStorage.getItem('admin_user_id');
             const user = users.find(u => u.id === id);
@@ -823,7 +835,7 @@
                 await loadUsers();
                 await loadDashboardStats();
             } catch (err) {
-                alert('❌ خطأ: ' + err.message);
+                showModal('❌ خطأ', err.message);
             }
         }
         
@@ -831,7 +843,8 @@
         // حذف مستخدم
         // ============================================
         async function deleteUser(id) {
-            if (!confirm('⚠️ هل أنت متأكد من حذف هذا المستخدم؟')) return;
+            const confirmed = await new Promise(r => showModal('تأكيد الحذف', '⚠️ هل أنت متأكد من حذف هذا المستخدم؟', 'confirm', r));
+            if (!confirmed) return;
             const token = sessionStorage.getItem('admin_token');
             const userId = sessionStorage.getItem('admin_user_id');
             try {
@@ -845,7 +858,7 @@
                 await loadUsers();
                 await loadDashboardStats();
             } catch (err) {
-                alert('❌ خطأ: ' + err.message);
+                showModal('❌ خطأ', err.message);
             }
         }
         
@@ -948,7 +961,7 @@
                 const data = await response.json();
                 allBirths = data.births || [];
                 if (allBirths.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#888;">لا توجد مواليد</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#888;">لا توجد مواليد</td></tr>';
                     return;
                 }
                 tbody.innerHTML = allBirths.map(b => `
@@ -961,11 +974,18 @@
                         <td>${getSourceText(b.registration_source)}</td>
                         <td>${b.branch_name || b.birth_governorate || '---'}</td>
                         <td>${formatDate(b.created_at)}</td>
+                        <td>
+                            <button class="btn-secondary btn-sm" onclick="adminViewBirth('${b.birth_number}')"><i class="fas fa-eye"></i></button>
+                            ${b.status === 'notified_civil' || b.status === 'civil_received' ? `
+                            <button class="btn-warning btn-sm" onclick="adminRevertBirth(${b.id}, '${b.birth_number}')"><i class="fas fa-undo"></i> إرجاع</button>
+                            ` : ''}
+                            ${b.status === 'certificate_issued' ? `<span style="color:#27ae60;font-size:11px;">✅ مكتمل</span>` : ''}
+                        </td>
                     </tr>
                 `).join('');
             } catch (err) {
                 console.error('Load admin births error:', err);
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:red;">خطأ في تحميل البيانات</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:red;">خطأ في تحميل البيانات</td></tr>';
             }
         }
         
@@ -1125,10 +1145,70 @@
         }
 
         // ============================================
+        // المودال والوظائف المساعدة
+        // ============================================
+        function showModal(title, message, type, callback) {
+            document.getElementById('modalTitle').innerHTML = title;
+            document.getElementById('modalBody').innerHTML = message;
+            const footer = document.getElementById('modalFooter');
+            if (type === 'confirm') {
+                footer.innerHTML = '<button class="btn-success" onclick="confirmModal(true)"><i class="fas fa-check"></i> نعم</button><button class="btn-secondary" onclick="confirmModal(false)"><i class="fas fa-times"></i> لا</button>';
+                window._modalCallback = callback;
+            } else {
+                footer.innerHTML = '<button class="btn-primary" onclick="closeModal()"><i class="fas fa-check"></i> موافق</button>';
+            }
+            document.getElementById('customModal').style.display = 'flex';
+        }
+        function closeModal() { document.getElementById('customModal').style.display = 'none'; }
+        function confirmModal(result) { closeModal(); if (window._modalCallback) window._modalCallback(result); }
+
+        function adminViewBirth(birthNumber) {
+            const b = allBirths.find(x => x.birth_number === birthNumber);
+            if (b) {
+                showModal('📋 تفاصيل المولود', `
+                    <div style="line-height:2;">
+                        <strong>رقم المولود:</strong> ${b.birth_number || '---'}<br>
+                        <strong>الأب:</strong> ${b.father_name || '---'}<br>
+                        <strong>الأم:</strong> ${b.mother_name || '---'}<br>
+                        <strong>رقم هاتف الأم:</strong> ${b.mother_phone || '---'}<br>
+                        <strong>النوع:</strong> ${b.baby_gender || '---'}<br>
+                        <strong>مكان الولادة:</strong> ${b.birth_place || '---'}<br>
+                        <strong>الحالة:</strong> ${getStatusText(b.status)}<br>
+                        <strong>المصدر:</strong> ${getSourceText(b.registration_source)}<br>
+                        <strong>الفرع:</strong> ${b.branch_name || '---'}<br>
+                        <strong>تاريخ التسجيل:</strong> ${formatDate(b.created_at)}
+                    </div>
+                `);
+            } else {
+                showModal('⚠️ تنبيه', 'المولود غير موجود');
+            }
+        }
+
+        async function adminRevertBirth(birthId, birthNumber) {
+            const confirmed = await new Promise(r => showModal('تأكيد الإرجاع', `هل تريد إرجاع المولود رقم ${birthNumber} إلى حالة قابلة للتعديل؟`, 'confirm', r));
+            if (!confirmed) return;
+            const token = sessionStorage.getItem('admin_token');
+            const userId = sessionStorage.getItem('admin_user_id');
+            try {
+                const response = await fetch(`${API_URL}/births`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, 'X-User-Id': userId },
+                    body: JSON.stringify({ birthId, status: 'printed' })
+                });
+                if (!response.ok) throw new Error('فشل الإرجاع');
+                showModal('✅ نجاح', 'تم إرجاع المولود بنجاح. يمكن الآن تعديله.');
+                loadAdminBirths();
+            } catch (err) {
+                showModal('❌ خطأ', err.message);
+            }
+        }
+
+        // ============================================
         // الخروج
         // ============================================
         async function logout() {
-            if (!confirm('هل تريد تسجيل الخروج؟')) return;
+            const confirmed = await new Promise(r => showModal('تأكيد الخروج', 'هل تريد تسجيل الخروج؟', 'confirm', r));
+            if (!confirmed) return;
             const token = sessionStorage.getItem('admin_token');
             try {
                 await fetch(`${API_URL}/logout`, {
@@ -1152,5 +1232,20 @@
             }
         })();
     </script>
+
+    <!-- ===== المودال المخصص ===== -->
+    <div id="customModal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeModal()">
+        <div class="modal-box">
+            <div class="modal-header-custom">
+                <span id="modalTitle">عنوان</span>
+                <span onclick="closeModal()" style="cursor:pointer;font-size:22px;">&times;</span>
+            </div>
+            <div class="modal-body-custom" id="modalBody"></div>
+            <div class="modal-footer-custom" id="modalFooter">
+                <button class="btn-primary" onclick="closeModal()">موافق</button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

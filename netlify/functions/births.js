@@ -84,7 +84,8 @@ exports.handler = async (event) => {
     }
 
     if (event.httpMethod === 'PUT') {
-        const { birthId, status, health_officer_id, is_notified, notification_date, is_certificate_issued, certificate_issue_date, certificate_number, civil_officer_id } = JSON.parse(event.body);
+        const body = JSON.parse(event.body);
+        const { birthId, status, health_officer_id, is_notified, notification_date, is_certificate_issued, certificate_issue_date, certificate_number, civil_officer_id } = body;
 
         if (!birthId) return error(400, 'birthId مطلوب');
 
@@ -93,19 +94,39 @@ exports.handler = async (event) => {
             return error(403, 'غير مصرح لك بتعديل المواليد');
         }
 
-        if (roleType !== 'admin') {
-            const { data: birthCheck, error: checkError } = await supabase
-                .from('births')
-                .select('branch_name')
-                .eq('id', birthId)
-                .single();
+        // جلب الحالة الحالية قبل التعديل
+        const { data: currentBirth, error: fetchError } = await supabase
+            .from('births')
+            .select('*')
+            .eq('id', birthId)
+            .single();
 
-            if (!checkError && birthCheck && birthCheck.branch_name !== user.branch_name) {
+        if (fetchError) return error(500, 'خطأ في جلب بيانات المولود');
+
+        if (roleType !== 'admin') {
+            if (currentBirth && currentBirth.branch_name !== user.branch_name) {
                 return error(403, 'لا يمكنك تعديل مولود من فرع آخر');
+            }
+            // موظف الصحة: لا يمكن تعديل بعد الإرسال للأحوال
+            if (roleType === 'health_officer' && currentBirth && (currentBirth.status === 'notified_civil' || currentBirth.status === 'civil_received' || currentBirth.status === 'certificate_issued')) {
+                return error(403, 'لا يمكن تعديل مولود بعد إرساله للأحوال');
             }
         }
 
         const updates = {};
+        // حقول البيانات (للتعديل)
+        const dataFields = ['father_name', 'mother_name', 'baby_gender', 'birth_place', 'birth_date', 'birth_governorate', 'birth_district', 'birth_type', 'delivery_type', 'mother_phone', 'mother_national_id', 'father_national_id', 'baby_weight', 'baby_height', 'health_status', 'health_notes', 'registration_note'];
+        let changedFields = [];
+        for (const field of dataFields) {
+            if (body[field] !== undefined && body[field] !== null) {
+                updates[field] = body[field];
+                if (currentBirth && currentBirth[field] !== body[field]) {
+                    changedFields.push(field);
+                }
+            }
+        }
+
+        // حقول سير العمل
         if (status) updates.status = status;
         if (health_officer_id) updates.health_officer_id = health_officer_id;
         if (is_notified !== undefined) updates.is_notified = is_notified;
@@ -146,11 +167,36 @@ exports.handler = async (event) => {
                     performed_by_name: user.username,
                     performed_by_role: user.role_type,
                     details: `تحديث حالة المولود إلى ${status}`,
-                    metadata: { previous_status: birth?.status }
+                    metadata: { previous_status: currentBirth?.status }
                 });
+
+            // تسجيل تغيير الحالة في سجل النشاطات
+            if (roleType === 'admin' || currentBirth?.status !== status) {
+                await supabase.from('activity_logs').insert({
+                    user_id: session.user_id,
+                    username: user.username,
+                    action: 'status_change',
+                    details: `تغيير حالة المولود ${birth?.birth_number || birthId} من "${currentBirth?.status || ''}" إلى "${status}"`,
+                    metadata: { birth_id: birthId, previous_status: currentBirth?.status, new_status: status },
+                    created_at: new Date().toISOString()
+                });
+            }
         }
 
-        return success({ success: true, message: 'تم تحديث المولود بنجاح', birth: birth });
+        // تسجيل التعديلات في سجل النشاطات
+        if (changedFields.length > 0) {
+            const changes = changedFields.map(f => `${f}: "${currentBirth?.[f] || ''}" → "${body[f] || ''}"`).join(', ');
+            await supabase.from('activity_logs').insert({
+                user_id: session.user_id,
+                username: user.username,
+                action: 'edit_birth',
+                details: `تعديل بيانات المولود ${birth?.birth_number || birthId}: ${changes}`,
+                metadata: { birth_id: birthId, changed_fields: changedFields, previous: currentBirth, new: updates },
+                created_at: new Date().toISOString()
+            });
+        }
+
+        return success({ success: true, message: 'تم تحديث المولود بنجاح', birth: birth, changed: changedFields });
     }
 
     return error(405, 'Method not allowed');
