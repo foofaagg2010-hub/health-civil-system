@@ -1345,21 +1345,24 @@
                     }
 
                     /* ===== الاستمارة الرسمية: إخبار عن ولادة ===== */
-                    .off-wrap { padding: 6px 2px; }
-                    .off-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
-                    .off-serial { font-size: 12px; line-height: 1.9; min-width: 150px; }
-                    .off-serial .v { font-weight: bold; }
-                    .off-head { text-align: center; flex: 1; }
-                    .off-head .rep { font-size: 14px; font-weight: bold; }
-                    .off-head .min { font-size: 13px; font-weight: bold; }
-                    .off-head .auth { font-size: 13px; font-weight: bold; }
+                    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                    .off-wrap { padding: 6px 2px; position: relative; z-index: 1; }
+                    img.off-watermark { position: fixed; top: 38%; left: 50%; transform: translate(-50%, -50%); width: 430px; opacity: 0.10; z-index: 0; pointer-events: none; }
+                    .off-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+                    .off-side { text-align: right; font-weight: bold; font-size: 13.5px; line-height: 1.9; color: #1a1a1a; min-width: 200px; }
+                    .off-eagle { text-align: center; flex: 1; }
+                    .off-eagle img { height: 80px; }
+                    .off-serial { font-size: 12.5px; line-height: 1.9; min-width: 170px; text-align: left; }
+                    .off-serial .v { font-weight: bold; font-size: 13.5px; }
                     .off-title { text-align: center; font-size: 19px; font-weight: bold; margin: 6px 0 8px 0; }
                     .off-addr { font-size: 12.5px; line-height: 2; margin-bottom: 8px; }
                     .off-addr .blank { display: inline-block; min-width: 120px; border-bottom: 1px dotted #333; }
                     table.off-tbl { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12.5px; }
                     table.off-tbl th, table.off-tbl td { border: 1px solid #333; padding: 5px 6px; text-align: center; }
-                    table.off-tbl th.sec-head { background: #b7d8a8; font-size: 14px; font-weight: bold; }
-                    table.off-tbl td.lbl { background: #f3e5e5; font-weight: bold; white-space: nowrap; }
+                    table.off-tbl th.sec-head { background: #7cb342; color: #ffffff; font-size: 15px; font-weight: bold; padding: 7px 6px; text-shadow: 0 1px 1px rgba(0,0,0,0.2); }
+                    table.off-tbl td.lbl { background: #dcedc8; color: #33691e; font-weight: bold; font-size: 13px; white-space: nowrap; }
+                    table.off-tbl td.name { font-weight: bold; font-size: 14.5px; color: #1a237e; }
+                    table.off-tbl tr.sub-head td { background: #f1f8e9; color: #558b2f; font-weight: bold; }
                     table.off-tbl td.val { text-align: right; }
                     .chk { display: inline-block; min-width: 16px; height: 16px; border: 1px solid #333; vertical-align: middle; margin: 0 3px; font-size: 12px; line-height: 15px; }
                     .foot-note { font-size: 12.5px; line-height: 2.1; margin-top: 6px; }
@@ -1375,12 +1378,14 @@
             </head>
             <body>
                 <div class="off-wrap">
+                <img class="off-watermark" src="images.png" alt="">
                 <div class="off-top">
-                    <div class="off-head">
-                        <div class="rep">الجمهورية اليمنية</div>
-                        <div class="min">وزارة الداخلية</div>
-                        <div class="auth">مصلحة الأحوال المدنية والسجل المدني</div>
+                    <div class="off-side">
+                        <div>الجمهورية اليمنية</div>
+                        <div>وزارة الداخلية</div>
+                        <div>مصلحة الأحوال المدنية والسجل المدني</div>
                     </div>
+                    <div class="off-eagle"><img src="image.png" alt="شعار الجمهورية اليمنية"></div>
                     <div class="off-serial">
                         <div>الرقم التسلسلي: <span class="v">${notificationNumber}</span>${copyText}</div>
                         <div>التاريخ: <span class="v">${today}</span></div>
@@ -1440,8 +1445,8 @@
                     </tr>
                     <tr>
                         <td class="lbl">اسم القائم بالولادة:</td>
-                        <td colspan="2">${birth.midwife_name || birth.health_officer_name || ''}</td>
-                        <td>ختم القائم بالولادة</td>
+                        <td colspan="2" class="name">${birth.midwife_name || birth.health_officer_name || ''}</td>
+                        <td style="min-width:170px;vertical-align:top;"><div class="lbl" style="font-weight:bold;color:#33691e;">ختم القائم بالولادة</div><div style="height:80px;"></div></td>
                     </tr>
                 </table>`; })()}
                 
@@ -1456,7 +1461,7 @@
                     </tr>
                     <tr>
                         <td class="lbl" rowspan="2">الأب</td>
-                        <td rowspan="2">${birth.father_name || ''}</td>
+                        <td rowspan="2" class="name">${birth.father_name || ''}</td>
                         <td>يمني <span class="chk">✓</span></td>
                         <td rowspan="2">${birth.father_national_id || ''}</td>
                         <td rowspan="2">${birth.birth_district || ''} ${birth.birth_governorate || ''}</td>
@@ -1466,7 +1471,7 @@
                     </tr>
                     <tr>
                         <td class="lbl" rowspan="2">الأم</td>
-                        <td rowspan="2">${birth.mother_name || ''}</td>
+                        <td rowspan="2" class="name">${birth.mother_name || ''}</td>
                         <td>يمنية <span class="chk">✓</span></td>
                         <td rowspan="2">${birth.mother_national_id || ''}</td>
                         <td rowspan="2">${birth.birth_district || ''} ${birth.birth_governorate || ''}</td>
@@ -1484,7 +1489,7 @@
                         <td class="lbl">محل الإقامة</td>
                     </tr>
                     <tr>
-                        <td>${birth.father_name || ''}</td>
+                        <td class="name">${birth.father_name || ''}</td>
                         <td>والد المولود</td>
                         <td>${birth.father_national_id || ''}</td>
                         <td>${birth.birth_district || ''} ${birth.birth_governorate || ''}</td>
