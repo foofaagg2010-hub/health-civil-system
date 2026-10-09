@@ -704,13 +704,13 @@
                 window.allUsers = users;
                 
                 if (users.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#888;">لا يوجد مستخدمين</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#888;">لا يوجد مستخدمين</td></tr>';
                     return;
                 }
                 renderUsers(users);
             } catch (err) {
                 console.error('Load users error:', err);
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:red;">خطأ في تحميل المستخدمين</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:red;">خطأ في تحميل المستخدمين</td></tr>';
             }
         }
         
@@ -730,11 +730,14 @@
                     <td>${u.district || '---'}</td>
                     <td>${u.phone_number || '---'}</td>
                     <td><span class="status-badge ${u.is_active ? 'status-active' : 'status-inactive'}">${u.is_active ? 'نشط' : 'غير نشط'}</span></td>
-                    <td>
-                        <button class="btn-secondary btn-sm" onclick="toggleUser(${u.id})">
+                    <td style="white-space:nowrap;">
+                        <button class="btn-secondary btn-sm" onclick="toggleUser(${u.id})" title="تفعيل/إيقاف">
                             <i class="fas ${u.is_active ? 'fa-pause' : 'fa-play'}"></i>
                         </button>
-                        <button class="btn-danger btn-sm" onclick="deleteUser(${u.id})">
+                        <button class="btn-primary btn-sm" onclick="openUserEdit(${u.id})" title="تعديل">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-danger btn-sm" onclick="deleteUser(${u.id})" title="حذف">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -850,6 +853,81 @@
             }
         }
         
+        // ============================================
+        // تعديل مستخدم
+        // ============================================
+        function openUserEdit(id) {
+            const u = (window.allUsers || users).find(x => x.id === id);
+            if (!u) { showModal('⚠️ تنبيه', 'المستخدم غير موجود'); return; }
+            document.getElementById('editUserId').value = u.id;
+            document.getElementById('editUsername').value = u.username || '';
+            document.getElementById('editPassword').value = '';
+            document.getElementById('editRole').value = u.role_type || u.role || 'midwife';
+            document.getElementById('editBranch').value = u.branch_name || '';
+            document.getElementById('editRegion').value = u.region || '';
+            document.getElementById('editDistrict').value = u.district || '';
+            document.getElementById('editPhone').value = u.phone_number || '';
+            document.getElementById('editHospital').value = u.hospital_name || '';
+            document.getElementById('editIsActive').checked = u.is_active !== false;
+            document.getElementById('editCanEdit').checked = !!u.can_edit;
+            document.getElementById('editCanViewLogs').checked = !!u.can_view_logs;
+            document.getElementById('editCanViewUsers').checked = !!u.can_view_users;
+            const alertDiv = document.getElementById('userEditAlert');
+            alertDiv.style.display = 'none';
+            document.getElementById('userEditModal').style.display = 'flex';
+        }
+        function closeUserEdit() {
+            document.getElementById('userEditModal').style.display = 'none';
+        }
+        async function saveUserEdit() {
+            const token = sessionStorage.getItem('admin_token');
+            const userId = sessionStorage.getItem('admin_user_id');
+            const alertDiv = document.getElementById('userEditAlert');
+            const data = {
+                id: parseInt(document.getElementById('editUserId').value),
+                username: document.getElementById('editUsername').value.trim(),
+                password: document.getElementById('editPassword').value,
+                role_type: document.getElementById('editRole').value,
+                branch_name: document.getElementById('editBranch').value.trim(),
+                region: document.getElementById('editRegion').value.trim(),
+                district: document.getElementById('editDistrict').value.trim(),
+                phone_number: document.getElementById('editPhone').value.trim(),
+                hospital_name: document.getElementById('editHospital').value.trim(),
+                is_active: document.getElementById('editIsActive').checked,
+                can_edit: document.getElementById('editCanEdit').checked,
+                can_view_logs: document.getElementById('editCanViewLogs').checked,
+                can_view_users: document.getElementById('editCanViewUsers').checked
+            };
+            if (!data.username || !data.role_type || !data.branch_name || !data.region || !data.district) {
+                alertDiv.className = 'alert alert-error';
+                alertDiv.innerHTML = '❌ يرجى ملء الحقول المطلوبة (الاسم، الدور، الفرع، المحافظة، المديرية)';
+                alertDiv.style.display = 'block';
+                return;
+            }
+            if (!data.password) delete data.password;
+            try {
+                const response = await fetch(`${API_URL}/users`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                        'X-User-Id': userId
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'فشل حفظ التعديل');
+                closeUserEdit();
+                showModal('✅ نجاح', 'تم حفظ تعديل المستخدم بنجاح');
+                await loadUsers();
+                await loadDashboardStats();
+            } catch (err) {
+                alertDiv.className = 'alert alert-error';
+                alertDiv.innerHTML = `❌ ${err.message}`;
+                alertDiv.style.display = 'block';
+            }
+        }
+
         // ============================================
         // حذف مستخدم
         // ============================================
@@ -1254,6 +1332,76 @@
             <div class="modal-body-custom" id="modalBody"></div>
             <div class="modal-footer-custom" id="modalFooter">
                 <button class="btn-primary" onclick="closeModal()">موافق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== نافذة تعديل المستخدم ===== -->
+    <div id="userEditModal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)closeUserEdit()">
+        <div class="modal-box" style="max-width:620px;">
+            <div class="modal-header-custom">
+                <span><i class="fas fa-edit"></i> تعديل المستخدم</span>
+                <span onclick="closeUserEdit()" style="cursor:pointer;font-size:22px;">&times;</span>
+            </div>
+            <div class="modal-body-custom">
+                <div id="userEditAlert" class="alert"></div>
+                <input type="hidden" id="editUserId">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>اسم المستخدم <span style="color:red;">*</span></label>
+                        <input type="text" id="editUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label>كلمة مرور جديدة (اتركها فارغة للإبقاء)</label>
+                        <input type="password" id="editPassword" placeholder="••••••">
+                    </div>
+                    <div class="form-group">
+                        <label>الدور <span style="color:red;">*</span></label>
+                        <select id="editRole">
+                            <option value="midwife">👩‍⚕️ قابلة</option>
+                            <option value="health_officer">🏥 موظف صحة</option>
+                            <option value="civil_officer">📋 موظف أحوال</option>
+                            <option value="admin">👑 مدير</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>الفرع <span style="color:red;">*</span></label>
+                        <input type="text" id="editBranch">
+                    </div>
+                    <div class="form-group">
+                        <label>المحافظة <span style="color:red;">*</span></label>
+                        <input type="text" id="editRegion">
+                    </div>
+                    <div class="form-group">
+                        <label>المديرية <span style="color:red;">*</span></label>
+                        <input type="text" id="editDistrict">
+                    </div>
+                    <div class="form-group">
+                        <label>رقم الهاتف</label>
+                        <input type="tel" id="editPhone">
+                    </div>
+                    <div class="form-group">
+                        <label>اسم المستشفى</label>
+                        <input type="text" id="editHospital">
+                    </div>
+                    <div class="form-group form-full">
+                        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+                            <input type="checkbox" id="editIsActive"> الحساب نشط
+                        </label>
+                    </div>
+                    <div class="form-group form-full">
+                        <label>صلاحيات إضافية</label>
+                        <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:5px;">
+                            <label><input type="checkbox" id="editCanEdit"> صلاحية التعديل</label>
+                            <label><input type="checkbox" id="editCanViewLogs"> مشاهدة السجل</label>
+                            <label><input type="checkbox" id="editCanViewUsers"> إدارة المستخدمين</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer-custom">
+                <button class="btn-success" onclick="saveUserEdit()"><i class="fas fa-save"></i> حفظ</button>
+                <button class="btn-secondary" onclick="closeUserEdit()"><i class="fas fa-times"></i> إلغاء</button>
             </div>
         </div>
     </div>
