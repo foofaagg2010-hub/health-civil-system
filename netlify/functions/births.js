@@ -130,16 +130,6 @@ exports.handler = async (event) => {
 
         if (fetchError) return error(500, 'خطأ في جلب بيانات المولود');
 
-        if (roleType !== 'admin') {
-            if (currentBirth && !inScope(user, currentBirth)) {
-                return error(403, 'لا يمكنك تعديل مولود من خارج نطاقك (فرع/محافظة/مديرية أخرى)');
-            }
-            // موظف الصحة: لا يمكن تعديل بعد الإرسال للأحوال
-            if (roleType === 'health_officer' && currentBirth && (currentBirth.status === 'notified_civil' || currentBirth.status === 'civil_received' || currentBirth.status === 'certificate_issued')) {
-                return error(403, 'لا يمكن تعديل مولود بعد إرساله للأحوال');
-            }
-        }
-
         const updates = {};
         // حقول البيانات (للتعديل)
         const dataFields = ['father_name', 'mother_name', 'baby_gender', 'birth_place_type', 'birth_place', 'birth_date', 'birth_governorate', 'birth_district', 'birth_type', 'delivery_type', 'mother_phone', 'mother_national_id', 'father_national_id', 'baby_weight', 'baby_height', 'health_status', 'health_notes', 'registration_note'];
@@ -156,6 +146,22 @@ exports.handler = async (event) => {
         // تعقيم نوع مكان الولادة
         if (updates.birth_place_type && !['مستشفى', 'منزل'].includes(updates.birth_place_type)) {
             delete updates.birth_place_type;
+        }
+
+        if (roleType !== 'admin') {
+            if (currentBirth && !inScope(user, currentBirth)) {
+                return error(403, 'لا يمكنك تعديل مولود من خارج نطاقك (فرع/محافظة/مديرية أخرى)');
+            }
+            // موظف الصحة: بعد الإرسال للأحوال لا تعديل ولا طباعة، والإرجاع مسموح فقط قبل تسجيل الشهادة
+            if (roleType === 'health_officer' && currentBirth) {
+                const st = currentBirth.status;
+                const sent = (st === 'notified_civil' || st === 'civil_received');
+                const certified = (st === 'certificate_issued');
+                const isRevertOnly = (status === 'printed' && changedFields.length === 0 && sent);
+                if (certified || (sent && !isRevertOnly)) {
+                    return error(403, 'لا يمكن تعديل هذا الطلب بعد إرساله للأحوال — الإرجاع مسموح فقط قبل تسجيل شهادة الميلاد');
+                }
+            }
         }
 
         // حقول سير العمل

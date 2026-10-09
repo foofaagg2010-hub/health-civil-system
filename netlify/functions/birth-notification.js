@@ -23,6 +23,20 @@ exports.handler = async (event) => {
 
         if (birthError || !birth) return error(404, 'المولود غير موجود');
 
+        const roleType = user.role_type || user.role;
+        if (roleType !== 'admin') {
+            // النطاق: تطابق كامل (فرع + محافظة + مديرية)
+            const scoped = user.branch_name && user.region && user.district
+                && birth.branch_name === user.branch_name
+                && birth.birth_governorate === user.region
+                && birth.birth_district === user.district;
+            if (!scoped) return error(403, 'لا يمكنك طباعة إخطار من خارج نطاقك');
+            // بعد الإرسال للأحوال أو تسجيل الشهادة: ممنوع الطباعة (الطباعة كانت ترجع الحالة إلى printed)
+            if (['notified_civil', 'civil_received', 'certificate_issued'].includes(birth.status)) {
+                return error(403, 'لا يمكن طباعة هذا الإخطار بعد إرساله للأحوال المدنية');
+            }
+        }
+
         const yearPart = new Date().getFullYear();
         const newCount = (birth.printed_count || 0) + 1;
 

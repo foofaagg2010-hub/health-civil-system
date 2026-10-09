@@ -1001,7 +1001,7 @@
                     `;
                 } else if (type === 'sent') {
                     actions = `
-                        <button class="btn-primary btn-sm" onclick="printNotification(${b.id}, '${b.birth_number}')"><i class="fas fa-print"></i> إعادة طباعة</button>
+                        <button class="btn-warning btn-sm" onclick="revertBirth(${b.id}, '${b.birth_number}')"><i class="fas fa-undo"></i> إرجاع</button>
                         <button class="btn-secondary btn-sm" onclick="viewBirth('${b.birth_number}')"><i class="fas fa-eye"></i></button>
                     `;
                 }
@@ -1067,6 +1067,12 @@
         // طباعة إخطار الولادة
         // ============================================
         async function printNotification(birthId, birthNumber) {
+            const known = (typeof taskboxData !== 'undefined' ? taskboxData : []).find(b => b.id === birthId)
+                || (typeof allBirths !== 'undefined' ? allBirths : []).find(b => b.id === birthId);
+            if (known && ['notified_civil', 'civil_received', 'certificate_issued'].includes(known.status)) {
+                showModal('⛔ غير مسموح', 'لا يمكن طباعة هذا الإخطار بعد إرساله للأحوال المدنية');
+                return;
+            }
             const confirmed = await new Promise(r => showModal('تأكيد الطباعة', `🖨️ هل تريد طباعة إخطار المولود رقم ${birthNumber}؟`, 'confirm', r));
             if (!confirmed) return;
             
@@ -1664,12 +1670,17 @@
                             <button class="btn-secondary btn-sm" onclick="viewBirth('${b.birth_number}')">
                                 <i class="fas fa-eye"></i>
                             </button>
+                            ${b.status === 'notified_civil' || b.status === 'civil_received' ? `
+                            <span style="color:#27ae60;font-size:12px;">✅ تم الإرسال</span>
+                            <button class="btn-warning btn-sm" onclick="revertBirth(${b.id}, '${b.birth_number}')">
+                                <i class="fas fa-undo"></i> إرجاع
+                            </button>
+                            ` : b.status === 'certificate_issued' ? `
+                            <span style="color:#1a237e;font-size:12px;">✅ تم تسجيل الشهادة</span>
+                            ` : `
                             <button class="btn-primary btn-sm" onclick="printNotification(${b.id}, '${b.birth_number}')">
                                 <i class="fas fa-print"></i> طباعة
                             </button>
-                            ${b.status === 'notified_civil' || b.status === 'civil_received' ? `
-                            <span style="color:#27ae60;font-size:12px;">✅ تم الإرسال</span>
-                            ` : `
                             <button class="btn-primary btn-sm" onclick="sendToCivil(${b.id}, '${b.birth_number}')">
                                 <i class="fas fa-paper-plane"></i> إرسال للأحوال
                             </button>
@@ -1763,7 +1774,36 @@
                 showModal('❌ خطأ', err.message);
             }
         }
-        
+
+        // ============================================
+        // إرجاع مولود مرسل (قبل تسجيل الشهادة فقط)
+        // ============================================
+        async function revertBirth(birthId, birthNumber) {
+            const confirmed = await new Promise(r => showModal('تأكيد الإرجاع', `↩️ إرجاع المولود رقم ${birthNumber} من الأحوال إلى قائمة الجاهزة؟ (متاح فقط قبل تسجيل شهادة الميلاد)`, 'confirm', r));
+            if (!confirmed) return;
+            const token = sessionStorage.getItem('admin_token');
+            const userId = sessionStorage.getItem('admin_user_id');
+            try {
+                const response = await fetch(`${API_URL}/births`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                        'X-User-Id': userId
+                    },
+                    body: JSON.stringify({ birthId, status: 'printed' })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'فشل الإرجاع');
+                showModal('✅ نجاح', 'تم إرجاع المولود بنجاح. يمكن الآن تعديله وطباعته مجدداً.');
+                await loadAll();
+                await loadStats();
+                await loadTaskBox();
+            } catch (err) {
+                showModal('❌ خطأ', err.message);
+            }
+        }
+
         // ============================================
         // عرض تفاصيل المولود
         // ============================================
