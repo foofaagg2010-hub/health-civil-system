@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS births (
     father_national_id VARCHAR(20),
     
     -- مكان وتاريخ الولادة
+    birth_place_type VARCHAR(20) DEFAULT 'مستشفى' CHECK (birth_place_type IN ('مستشفى', 'منزل')),
     birth_place VARCHAR(300) NOT NULL,
     birth_governorate VARCHAR(100),
     birth_district VARCHAR(100),

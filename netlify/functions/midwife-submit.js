@@ -66,6 +66,7 @@ exports.handler = async (event) => {
             mother_name: data.mother_name,
             mother_national_id: data.mother_national_id || null,
             father_national_id: data.father_national_id || null,
+            birth_place_type: (data.birth_place_type === 'منزل' ? 'منزل' : 'مستشفى'),
             birth_place: data.birth_place,
             birth_governorate: data.birth_governorate || user.region || '',
             birth_district: data.birth_district || user.district || '',

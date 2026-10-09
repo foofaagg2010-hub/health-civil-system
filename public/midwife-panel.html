@@ -245,8 +245,15 @@
                         <input type="tel" id="motherPhone" placeholder="مثال: 771234567" required>
                     </div>
                     <div class="form-group">
+                        <label>نوع مكان الولادة <span style="color:red;">*</span></label>
+                        <select id="birthPlaceType" required>
+                            <option value="مستشفى">مستشفى</option>
+                            <option value="منزل">منزل</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label>مكان الولادة <span style="color:red;">*</span></label>
-                        <input type="text" id="birthPlace" placeholder="المكان بالتفصيل" required>
+                        <input type="text" id="birthPlace" placeholder="اسم المستشفى / وصف المنزل" required>
                     </div>
                     <div class="form-group">
                         <label>المحافظة</label>
@@ -512,9 +519,10 @@
                 father_national_id: document.getElementById('fatherNationalId').value.trim() || null,
                 mother_name: document.getElementById('motherName').value.trim(),
                 mother_phone: document.getElementById('motherPhone').value.trim(),
+                birth_place_type: document.getElementById('birthPlaceType').value,
                 birth_place: document.getElementById('birthPlace').value.trim(),
-                birth_governorate: document.getElementById('birthGovernorate').value.trim(),
-                birth_district: document.getElementById('birthDistrict').value.trim(),
+                birth_governorate: document.getElementById('birthGovernorate').value.trim() || currentUser.region,
+                birth_district: document.getElementById('birthDistrict').value.trim() || currentUser.district,
                 birth_date: document.getElementById('birthDate').value || new Date().toISOString().split('T')[0],
                 birth_type: document.getElementById('birthType').value,
                 delivery_type: document.getElementById('deliveryType').value || null,
@@ -587,6 +595,13 @@
         
         (async function init() {
             if (await checkAuth()) {
+                // تعبئة المحافظة والمديرية تلقائياً من نطاق الحساب
+                if (!document.getElementById('birthGovernorate').value && currentUser.region) {
+                    document.getElementById('birthGovernorate').value = currentUser.region;
+                }
+                if (!document.getElementById('birthDistrict').value && currentUser.district) {
+                    document.getElementById('birthDistrict').value = currentUser.district;
+                }
                 await loadStats();
                 await loadBirths();
             }

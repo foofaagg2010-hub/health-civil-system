@@ -1,12 +1,12 @@
 const { getSupabase, authenticate, corsHeaders, handleOptions, error, success } = require('./_shared');
 
-// التحقق من أن المولود ضمن نطاق المستخدم (فرع ← محافظة ← مديرية)
+// التحقق من التطابق الكامل للنطاق: نفس الفرع + نفس المحافظة + نفس المديرية
 function inScope(user, birth) {
     if (!birth) return false;
-    if (user.branch_name) return birth.branch_name === user.branch_name;
-    if (user.region) return birth.birth_governorate === user.region;
-    if (user.district) return birth.birth_district === user.district;
-    return false;
+    if (!user.branch_name || !user.region || !user.district) return false;
+    return birth.branch_name === user.branch_name
+        && birth.birth_governorate === user.region
+        && birth.birth_district === user.district;
 }
 
 exports.handler = async (event) => {
@@ -33,12 +33,12 @@ exports.handler = async (event) => {
         if (roleType === 'midwife') {
             query = query.eq('midwife_id', session.user_id);
         } else if (roleType === 'health_officer' || roleType === 'supervisor' || roleType === 'civil_officer') {
-            if (user.branch_name) {
-                query = query.eq('branch_name', user.branch_name);
-            } else if (user.region) {
-                query = query.eq('birth_governorate', user.region);
-            } else if (user.district) {
-                query = query.eq('birth_district', user.district);
+            if (user.branch_name && user.region && user.district) {
+                // التطابق الكامل: نفس الفرع + نفس المحافظة + نفس المديرية
+                query = query
+                    .eq('branch_name', user.branch_name)
+                    .eq('birth_governorate', user.region)
+                    .eq('birth_district', user.district);
             } else {
                 // حساب بدون أي نطاق: إرجاع فارغ بدل تسريب بيانات المحافظات الأخرى
                 return success({
@@ -142,7 +142,7 @@ exports.handler = async (event) => {
 
         const updates = {};
         // حقول البيانات (للتعديل)
-        const dataFields = ['father_name', 'mother_name', 'baby_gender', 'birth_place', 'birth_date', 'birth_governorate', 'birth_district', 'birth_type', 'delivery_type', 'mother_phone', 'mother_national_id', 'father_national_id', 'baby_weight', 'baby_height', 'health_status', 'health_notes', 'registration_note'];
+        const dataFields = ['father_name', 'mother_name', 'baby_gender', 'birth_place_type', 'birth_place', 'birth_date', 'birth_governorate', 'birth_district', 'birth_type', 'delivery_type', 'mother_phone', 'mother_national_id', 'father_national_id', 'baby_weight', 'baby_height', 'health_status', 'health_notes', 'registration_note'];
         let changedFields = [];
         for (const field of dataFields) {
             if (body[field] !== undefined && body[field] !== null) {
@@ -151,6 +151,11 @@ exports.handler = async (event) => {
                     changedFields.push(field);
                 }
             }
+        }
+
+        // تعقيم نوع مكان الولادة
+        if (updates.birth_place_type && !['مستشفى', 'منزل'].includes(updates.birth_place_type)) {
+            delete updates.birth_place_type;
         }
 
         // حقول سير العمل

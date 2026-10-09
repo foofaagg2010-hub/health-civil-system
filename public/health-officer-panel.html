@@ -601,8 +601,15 @@
                             <input type="tel" id="motherPhone" placeholder="مثال: 771234567" required>
                         </div>
                         <div class="form-group">
+                            <label>نوع مكان الولادة <span style="color:red;">*</span></label>
+                            <select id="birthPlaceType" required>
+                                <option value="مستشفى">مستشفى</option>
+                                <option value="منزل">منزل</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label>مكان الولادة <span style="color:red;">*</span></label>
-                            <input type="text" id="birthPlace" placeholder="المكان بالتفصيل" required>
+                            <input type="text" id="birthPlace" placeholder="اسم المستشفى / وصف المنزل" required>
                         </div>
                         <div class="form-group">
                             <label>المحافظة</label>
@@ -1437,7 +1444,7 @@
                     </tr>
                     <tr>
                         <td colspan="2">مفرد <span class="chk">${birth.birth_type === 'مفرد' ? '✓' : ''}</span> &nbsp; توأم <span class="chk">${(birth.birth_type && birth.birth_type !== 'مفرد') ? '✓' : ''}</span></td>
-                        <td colspan="2">${birth.birth_place || ''} ${birth.delivery_type ? '(' + birth.delivery_type + ')' : ''}</td>
+                        <td colspan="2">${[(birth.birth_place_type || 'مستشفى'), birth.birth_place, birth.birth_governorate ? 'محافظة ' + birth.birth_governorate : '', birth.birth_district ? 'مديرية ' + birth.birth_district : ''].filter(Boolean).join(' - ')}${birth.delivery_type ? ' (' + birth.delivery_type + ')' : ''}</td>
                     </tr>
                     <tr>
                         <td class="lbl">صفة القائم بالولادة:</td>
@@ -1532,9 +1539,10 @@
                 father_national_id: document.getElementById('fatherNationalId').value.trim() || null,
                 mother_name: document.getElementById('motherName').value.trim(),
                 mother_phone: document.getElementById('motherPhone').value.trim(),
+                birth_place_type: document.getElementById('birthPlaceType').value,
                 birth_place: document.getElementById('birthPlace').value.trim(),
                 birth_governorate: document.getElementById('birthGovernorate').value.trim() || currentUser.region,
-                birth_district: document.getElementById('birthDistrict').value.trim(),
+                birth_district: document.getElementById('birthDistrict').value.trim() || currentUser.district,
                 birth_date: document.getElementById('birthDate').value || new Date().toISOString().split('T')[0],
                 birth_type: document.getElementById('birthType').value,
                 delivery_type: document.getElementById('deliveryType').value || 'طبيعي',
@@ -1877,7 +1885,10 @@
             document.getElementById('editMotherPhone').value = birth.mother_phone || '';
             document.getElementById('editFatherNationalId').value = birth.father_national_id || '';
             document.getElementById('editBabyGender').value = birth.baby_gender || 'ذكر';
+            document.getElementById('editBirthPlaceType').value = birth.birth_place_type || 'مستشفى';
             document.getElementById('editBirthPlace').value = birth.birth_place || '';
+            document.getElementById('editBirthGovernorate').value = birth.birth_governorate || '';
+            document.getElementById('editBirthDistrict').value = birth.birth_district || '';
             document.getElementById('editBirthDate').value = birth.birth_date ? birth.birth_date.split('T')[0] : '';
             document.getElementById('editBabyWeight').value = birth.baby_weight || '';
             document.getElementById('editHealthStatus').value = birth.health_status || 'جيد';
@@ -1898,7 +1909,10 @@
                 mother_phone: document.getElementById('editMotherPhone').value.trim(),
                 father_national_id: document.getElementById('editFatherNationalId').value.trim() || null,
                 baby_gender: document.getElementById('editBabyGender').value,
+                birth_place_type: document.getElementById('editBirthPlaceType').value,
                 birth_place: document.getElementById('editBirthPlace').value.trim(),
+                birth_governorate: document.getElementById('editBirthGovernorate').value.trim() || null,
+                birth_district: document.getElementById('editBirthDistrict').value.trim() || null,
                 birth_date: document.getElementById('editBirthDate').value || null,
                 baby_weight: document.getElementById('editBabyWeight').value ? parseFloat(document.getElementById('editBabyWeight').value) : null,
                 health_status: document.getElementById('editHealthStatus').value
@@ -1937,6 +1951,13 @@
             loadSavedNotifications();
             
             if (await checkAuth()) {
+                // تعبئة المحافظة والمديرية تلقائياً من نطاق الحساب
+                if (!document.getElementById('birthGovernorate').value && currentUser.region) {
+                    document.getElementById('birthGovernorate').value = currentUser.region;
+                }
+                if (!document.getElementById('birthDistrict').value && currentUser.district) {
+                    document.getElementById('birthDistrict').value = currentUser.district;
+                }
                 await loadStats();
                 await loadTaskBox();
                 await loadAll();
@@ -1977,7 +1998,10 @@
                     <div class="form-group"><label>رقم هاتف الأم</label><input type="tel" id="editMotherPhone"></div>
                     <div class="form-group"><label>الرقم الوطني للأب</label><input type="text" id="editFatherNationalId"></div>
                     <div class="form-group"><label>نوع المولود</label><select id="editBabyGender"><option value="ذكر">ذكر</option><option value="أنثى">أنثى</option></select></div>
+                    <div class="form-group"><label>نوع مكان الولادة</label><select id="editBirthPlaceType"><option value="مستشفى">مستشفى</option><option value="منزل">منزل</option></select></div>
                     <div class="form-group"><label>مكان الولادة</label><input type="text" id="editBirthPlace"></div>
+                    <div class="form-group"><label>المحافظة</label><input type="text" id="editBirthGovernorate"></div>
+                    <div class="form-group"><label>المديرية</label><input type="text" id="editBirthDistrict"></div>
                     <div class="form-group"><label>تاريخ الولادة</label><input type="date" id="editBirthDate"></div>
                     <div class="form-group"><label>وزن الطفل (كجم)</label><input type="number" id="editBabyWeight" step="0.1"></div>
                     <div class="form-group"><label>الحالة الصحية</label><select id="editHealthStatus"><option value="جيد">جيد</option><option value="يحتاج متابعة">يحتاج متابعة</option><option value="حرج">حرج</option><option value="حالة خاصة">حالة خاصة</option></select></div>
