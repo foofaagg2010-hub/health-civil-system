@@ -372,8 +372,12 @@
                             <input type="tel" id="userPhone" placeholder="رقم الهاتف">
                         </div>
                         <div class="form-group">
-                            <label>المنطقة</label>
-                            <input type="text" id="userRegion" placeholder="المنطقة">
+                            <label>المحافظة <span style="color:red;">*</span></label>
+                            <input type="text" id="userRegion" placeholder="مثال: لحج" required>
+                        </div>
+                        <div class="form-group">
+                            <label>المديرية <span style="color:red;">*</span></label>
+                            <input type="text" id="userDistrict" placeholder="مثال: ردفان" required>
                         </div>
                         <div class="form-group">
                             <label>اسم المستشفى (لموظف الصحة)</label>
@@ -409,13 +413,15 @@
                                 <th>اسم المستخدم</th>
                                 <th>الدور</th>
                                 <th>الفرع</th>
+                                <th>المحافظة</th>
+                                <th>المديرية</th>
                                 <th>رقم الهاتف</th>
                                 <th>الحالة</th>
                                 <th>إجراءات</th>
                             </tr>
                         </thead>
                         <tbody id="usersTableBody">
-                            <tr><td colspan="7" style="text-align:center;padding:30px;color:#888;">
+                            <tr><td colspan="9" style="text-align:center;padding:30px;color:#888;">
                                 <i class="fas fa-spinner fa-pulse"></i> جاري التحميل...
                             </td></tr>
                         </tbody>
@@ -711,7 +717,7 @@
         function renderUsers(usersList) {
             const tbody = document.getElementById('usersTableBody');
             if (usersList.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#888;">لا توجد نتائج مطابقة</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#888;">لا توجد نتائج مطابقة</td></tr>';
                 return;
             }
             tbody.innerHTML = usersList.map((u, i) => `
@@ -720,6 +726,8 @@
                     <td><strong>${u.username}</strong></td>
                     <td><span class="role-badge-table ${getRoleClass(u.role_type || u.role)}">${getRoleText(u.role_type || u.role)}</span></td>
                     <td>${u.branch_name || '---'}</td>
+                    <td>${u.region || '---'}</td>
+                    <td>${u.district || '---'}</td>
                     <td>${u.phone_number || '---'}</td>
                     <td><span class="status-badge ${u.is_active ? 'status-active' : 'status-inactive'}">${u.is_active ? 'نشط' : 'غير نشط'}</span></td>
                     <td>
@@ -740,9 +748,11 @@
                 renderUsers(window.allUsers || users);
                 return;
             }
-            const filtered = (window.allUsers || users).filter(u => 
+            const filtered = (window.allUsers || users).filter(u =>
                 u.username.toLowerCase().includes(search) ||
                 (u.branch_name && u.branch_name.toLowerCase().includes(search)) ||
+                (u.region && u.region.toLowerCase().includes(search)) ||
+                (u.district && u.district.toLowerCase().includes(search)) ||
                 (u.role_type && u.role_type.toLowerCase().includes(search))
             );
             renderUsers(filtered);
@@ -764,6 +774,7 @@
                 branch_name: document.getElementById('userBranch').value.trim(),
                 phone_number: document.getElementById('userPhone').value.trim(),
                 region: document.getElementById('userRegion').value.trim(),
+                district: document.getElementById('userDistrict').value.trim(),
                 hospital_name: document.getElementById('userHospital').value.trim(),
                 can_edit: document.getElementById('userCanEdit').checked,
                 can_view_logs: document.getElementById('userCanViewLogs').checked,
@@ -771,9 +782,9 @@
                 is_active: true
             };
             
-            if (!data.username || !data.password || !data.role_type || !data.branch_name) {
+            if (!data.username || !data.password || !data.role_type || !data.branch_name || !data.region || !data.district) {
                 alertDiv.className = 'alert alert-error';
-                alertDiv.innerHTML = '❌ يرجى ملء جميع الحقول المطلوبة (اسم المستخدم، كلمة المرور، الدور، الفرع)';
+                alertDiv.innerHTML = '❌ يرجى ملء جميع الحقول المطلوبة (اسم المستخدم، كلمة المرور، الدور، الفرع، المحافظة، المديرية)';
                 alertDiv.style.display = 'block';
                 return;
             }

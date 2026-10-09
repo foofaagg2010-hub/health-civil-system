@@ -1,5 +1,14 @@
 const { getSupabase, authenticate, corsHeaders, handleOptions, error, success } = require('./_shared');
 
+// التحقق من أن المولود ضمن نطاق المستخدم (فرع ← محافظة ← مديرية)
+function inScope(user, birth) {
+    if (!birth) return false;
+    if (user.branch_name) return birth.branch_name === user.branch_name;
+    if (user.region) return birth.birth_governorate === user.region;
+    if (user.district) return birth.birth_district === user.district;
+    return false;
+}
+
 exports.handler = async (event) => {
     const preflight = handleOptions(event);
     if (preflight) return preflight;
@@ -26,6 +35,24 @@ exports.handler = async (event) => {
         } else if (roleType === 'health_officer' || roleType === 'supervisor' || roleType === 'civil_officer') {
             if (user.branch_name) {
                 query = query.eq('branch_name', user.branch_name);
+            } else if (user.region) {
+                query = query.eq('birth_governorate', user.region);
+            } else if (user.district) {
+                query = query.eq('birth_district', user.district);
+            } else {
+                // حساب بدون أي نطاق: إرجاع فارغ بدل تسريب بيانات المحافظات الأخرى
+                return success({
+                    births: [],
+                    total: 0,
+                    page: page,
+                    totalPages: 0,
+                    unscoped: true,
+                    user: {
+                        role_type: user.role_type,
+                        branch_name: user.branch_name,
+                        region: user.region
+                    }
+                });
             }
         }
 
@@ -104,8 +131,8 @@ exports.handler = async (event) => {
         if (fetchError) return error(500, 'خطأ في جلب بيانات المولود');
 
         if (roleType !== 'admin') {
-            if (currentBirth && currentBirth.branch_name !== user.branch_name) {
-                return error(403, 'لا يمكنك تعديل مولود من فرع آخر');
+            if (currentBirth && !inScope(user, currentBirth)) {
+                return error(403, 'لا يمكنك تعديل مولود من خارج نطاقك (فرع/محافظة/مديرية أخرى)');
             }
             // موظف الصحة: لا يمكن تعديل بعد الإرسال للأحوال
             if (roleType === 'health_officer' && currentBirth && (currentBirth.status === 'notified_civil' || currentBirth.status === 'civil_received' || currentBirth.status === 'certificate_issued')) {

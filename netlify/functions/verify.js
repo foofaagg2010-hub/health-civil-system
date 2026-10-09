@@ -22,7 +22,7 @@ exports.handler = async (event) => {
 
         const { data: user, error: userError } = await supabase
             .from('users')
-            .select('id, username, branch_name, role, role_type, can_edit, can_view_logs, can_view_users, hospital_name, region')
+            .select('id, username, branch_name, role, role_type, can_edit, can_view_logs, can_view_users, hospital_name, region, district')
             .eq('id', session.user_id)
             .single();
 
@@ -38,7 +38,8 @@ exports.handler = async (event) => {
             can_view_logs: user.can_view_logs || false,
             can_view_users: user.can_view_users || false,
             hospital_name: user.hospital_name,
-            region: user.region
+            region: user.region,
+            district: user.district
         });
 
     } catch (err) {

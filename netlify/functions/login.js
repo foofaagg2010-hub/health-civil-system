@@ -119,7 +119,8 @@ exports.handler = async (event) => {
                 can_view_logs: user.can_view_logs || false,
                 can_view_users: user.can_view_users || false,
                 hospital_name: user.hospital_name,
-                region: user.region
+                region: user.region,
+                district: user.district
             }
         });
 

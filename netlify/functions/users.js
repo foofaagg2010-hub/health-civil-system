@@ -37,10 +37,13 @@ exports.handler = async (event) => {
     if (event.httpMethod === 'POST') {
         if (currentUser.role !== 'admin') return error(403, 'غير مصرح لك بإضافة مستخدمين');
 
-        const { username, password, role_type, branch_name, phone_number, region, hospital_name, can_edit, can_view_logs, can_view_users } = JSON.parse(event.body);
+        const { username, password, role_type, branch_name, phone_number, region, district, hospital_name, can_edit, can_view_logs, can_view_users } = JSON.parse(event.body);
 
         if (!username || !password || !role_type || !branch_name) {
             return error(400, 'اسم المستخدم وكلمة المرور والدور والفرع مطلوبة');
+        }
+        if (role_type !== 'admin' && (!region || !district)) {
+            return error(400, 'المحافظة والمديرية مطلوبتان لهذا الدور');
         }
 
         const { data: existing } = await supabase
@@ -68,6 +71,7 @@ exports.handler = async (event) => {
                 branch_name,
                 phone_number: phone_number || null,
                 region: region || null,
+                district: district || null,
                 hospital_name: hospital_name || null,
                 is_active: true,
                 can_edit: can_edit || false,
@@ -89,7 +93,7 @@ exports.handler = async (event) => {
     if (event.httpMethod === 'PUT') {
         if (currentUser.role !== 'admin') return error(403, 'غير مصرح لك بتعديل المستخدمين');
 
-        const { id, username, password, branch_name, role_type, phone_number, region, hospital_name, is_active, can_edit, can_view_logs, can_view_users } = JSON.parse(event.body);
+        const { id, username, password, branch_name, role_type, phone_number, region, district, hospital_name, is_active, can_edit, can_view_logs, can_view_users } = JSON.parse(event.body);
 
         if (!id) return error(400, 'معرف المستخدم مطلوب');
 
@@ -99,6 +103,7 @@ exports.handler = async (event) => {
             role_type,
             phone_number,
             region,
+            district,
             hospital_name,
             is_active,
             can_edit: can_edit || false,
