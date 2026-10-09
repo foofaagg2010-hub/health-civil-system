@@ -1343,6 +1343,29 @@
                         color: #888;
                         font-size: 11px;
                     }
+
+                    /* ===== الاستمارة الرسمية: إخبار عن ولادة ===== */
+                    .off-wrap { padding: 6px 2px; }
+                    .off-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+                    .off-serial { font-size: 12px; line-height: 1.9; min-width: 150px; }
+                    .off-serial .v { font-weight: bold; }
+                    .off-head { text-align: center; flex: 1; }
+                    .off-head .rep { font-size: 14px; font-weight: bold; }
+                    .off-head .min { font-size: 13px; font-weight: bold; }
+                    .off-head .auth { font-size: 13px; font-weight: bold; }
+                    .off-title { text-align: center; font-size: 19px; font-weight: bold; margin: 6px 0 8px 0; }
+                    .off-addr { font-size: 12.5px; line-height: 2; margin-bottom: 8px; }
+                    .off-addr .blank { display: inline-block; min-width: 120px; border-bottom: 1px dotted #333; }
+                    table.off-tbl { width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 12.5px; }
+                    table.off-tbl th, table.off-tbl td { border: 1px solid #333; padding: 5px 6px; text-align: center; }
+                    table.off-tbl th.sec-head { background: #b7d8a8; font-size: 14px; font-weight: bold; }
+                    table.off-tbl td.lbl { background: #f3e5e5; font-weight: bold; white-space: nowrap; }
+                    table.off-tbl td.val { text-align: right; }
+                    .chk { display: inline-block; min-width: 16px; height: 16px; border: 1px solid #333; vertical-align: middle; margin: 0 3px; font-size: 12px; line-height: 15px; }
+                    .foot-note { font-size: 12.5px; line-height: 2.1; margin-top: 6px; }
+                    .sign-row { display: flex; justify-content: space-between; margin-top: 22px; font-size: 13px; }
+                    .sign-row .s { text-align: center; min-width: 180px; }
+                    .sign-row .ln { border-bottom: 1px solid #333; height: 28px; }
                     
                     @media print {
                         body { padding: 20px; }
@@ -1351,115 +1374,129 @@
                 </style>
             </head>
             <body>
-                <div class="header-top">
-                    <div>
-                        <span class="date-label">التاريخ:</span>
-                        <span>${today}</span>
+                <div class="off-wrap">
+                <div class="off-top">
+                    <div class="off-head">
+                        <div class="rep">الجمهورية اليمنية</div>
+                        <div class="min">وزارة الداخلية</div>
+                        <div class="auth">مصلحة الأحوال المدنية والسجل المدني</div>
+                    </div>
+                    <div class="off-serial">
+                        <div>الرقم التسلسلي: <span class="v">${notificationNumber}</span>${copyText}</div>
+                        <div>التاريخ: <span class="v">${today}</span></div>
                     </div>
                 </div>
-                
-                <div class="hospital-info">
-                    <div class="ministry">وزارة الصحة والسكان</div>
-                    <div class="hospital-name">${hospitalName}</div>
-                    <div class="branch-name">الفرع: ${branchName}</div>
+                <div class="off-title">إخبار عن ولادة</div>
+                <div class="off-addr">
+                    الأخ/ مدير إدارة الأحوال المدنية والسجل المدني مديرية: <span class="blank">&nbsp;${birth.birth_district || ''}&nbsp;</span>
+                    محافظة: <span class="blank">&nbsp;${birth.birth_governorate || branchName}&nbsp;</span><br>
+                    نحيطكم علماً بأخبار عن ولادة وفقاً للبيانات الآتية:
                 </div>
                 
-                <div class="title-section">
-                    <h1>إخطار عن مولود${copyText}</h1>
-                </div>
+                ${(() => { const d = birth.birth_date ? new Date(birth.birth_date) : null; const day = d ? d.getDate() : ''; const month = d ? (d.getMonth()+1) : ''; const year = d ? d.getFullYear() : ''; const weekday = d ? d.toLocaleDateString('ar-EG', { weekday: 'long' }) : ''; return `
+                <table class="off-tbl">
+                    <tr><th class="sec-head" colspan="5">بيانات واقعة الميلاد</th></tr>
+                    <tr>
+                        <td class="lbl">بيانات المولود</td>
+                        <td class="val" colspan="2">اسم المولود: ..............................</td>
+                        <td class="lbl">النوع:</td>
+                        <td>ذكر <span class="chk">${birth.baby_gender === 'ذكر' ? '✓' : ''}</span> &nbsp; أنثى <span class="chk">${birth.baby_gender === 'أنثى' ? '✓' : ''}</span></td>
+                    </tr>
+                    <tr><th class="sec-head" colspan="5">تاريخ الميلاد</th></tr>
+                    <tr>
+                        <td class="lbl">الوقت</td>
+                        <td class="lbl">اليوم</td>
+                        <td class="lbl" colspan="2">التاريخ والشهر</td>
+                        <td class="lbl">السنة</td>
+                    </tr>
+                    <tr>
+                        <td>${birth.birth_time || ''}</td>
+                        <td>${weekday}</td>
+                        <td colspan="2">${day} / ${month}</td>
+                        <td>${year}</td>
+                    </tr>
+                    <tr>
+                        <td class="lbl" colspan="2">الهجري:</td>
+                        <td colspan="3"></td>
+                    </tr>
+                    <tr>
+                        <td class="lbl" colspan="2">الميلادي:</td>
+                        <td colspan="3">${day} / ${month} / ${year} م</td>
+                    </tr>
+                </table>
+                <table class="off-tbl">
+                    <tr><th class="sec-head" colspan="4">بيانات الولادة</th></tr>
+                    <tr>
+                        <td class="lbl" colspan="2">نوع الولادة</td>
+                        <td class="lbl" colspan="2">محل الولادة</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">مفرد <span class="chk">${birth.birth_type === 'مفرد' ? '✓' : ''}</span> &nbsp; توأم <span class="chk">${(birth.birth_type && birth.birth_type !== 'مفرد') ? '✓' : ''}</span></td>
+                        <td colspan="2">${birth.birth_place || ''} ${birth.delivery_type ? '(' + birth.delivery_type + ')' : ''}</td>
+                    </tr>
+                    <tr>
+                        <td class="lbl">صفة القائم بالولادة:</td>
+                        <td colspan="3">طبيب <span class="chk"></span> &nbsp; طبيبة <span class="chk"></span> &nbsp; قابلة مجتمع <span class="chk">${birth.registration_source === 'midwife' ? '✓' : ''}</span> &nbsp; رقم ترخيص القابلة: ................</td>
+                    </tr>
+                    <tr>
+                        <td class="lbl">اسم القائم بالولادة:</td>
+                        <td colspan="2">${birth.midwife_name || birth.health_officer_name || ''}</td>
+                        <td>ختم القائم بالولادة</td>
+                    </tr>
+                </table>`; })()}
                 
-                <div class="data-section">
-                    <div class="section-title">📌 بيانات المولود</div>
-                    <div class="row">
-                        <span class="label">نوع المولود:</span>
-                        <span class="value">
-                            <span class="badge ${birth.baby_gender === 'ذكر' ? 'badge-male' : 'badge-female'}">
-                                ${birth.baby_gender || '---'}
-                            </span>
-                        </span>
-                    </div>
-                    <div class="row">
-                        <span class="label">مكان الولادة:</span>
-                        <span class="value">${birth.birth_place || '---'}</span>
-                    </div>
-                    <div class="row">
-                        <span class="label">تاريخ الولادة:</span>
-                        <span class="value">${birth.birth_date ? new Date(birth.birth_date).toLocaleDateString('ar-EG') : '---'}</span>
-                    </div>
-                    <div class="row">
-                        <span class="label">حالة الولادة:</span>
-                        <span class="value">${birth.birth_type || '---'}</span>
-                    </div>
-                    <div class="row">
-                        <span class="label">نوع الولادة:</span>
-                        <span class="value">${birth.delivery_type || 'طبيعي'}</span>
-                    </div>
-                    <div class="row">
-                        <span class="label">وزن الطفل:</span>
-                        <span class="value">${birth.baby_weight ? birth.baby_weight + ' كجم' : '---'}</span>
-                    </div>
-                    <div class="row">
-                        <span class="label">الحالة الصحية:</span>
-                        <span class="value">
-                            <span class="badge ${birth.health_status === 'جيد' ? 'badge-healthy' : 'badge-warning'}">
-                                ${birth.health_status || 'جيد'}
-                            </span>
-                        </span>
-                    </div>
-                    ${birth.twin_baby_gender ? `
-                    <div class="twin-section">
-                        <div style="font-weight:bold;color:#1a237e;font-size:12px;margin-bottom:5px;">👶 بيانات التوأم</div>
-                        <div class="row"><span class="label">النوع:</span><span class="value">${birth.twin_baby_gender}</span></div>
-                        <div class="row"><span class="label">الوزن:</span><span class="value">${birth.twin_baby_weight ? birth.twin_baby_weight + ' كجم' : '---'}</span></div>
-                        <div class="row"><span class="label">الحالة الصحية:</span><span class="value">${birth.twin_health_status || 'جيد'}</span></div>
-                    </div>
-                    ` : ''}
+                <table class="off-tbl">
+                    <tr><th class="sec-head" colspan="5">بيانات الوالدين</th></tr>
+                    <tr>
+                        <td class="lbl">نوع الأبوة</td>
+                        <td class="lbl">الاسم الكامل</td>
+                        <td class="lbl">الجنسية</td>
+                        <td class="lbl">رقم البطاقة الشخصية الذكية</td>
+                        <td class="lbl">محل الإقامة</td>
+                    </tr>
+                    <tr>
+                        <td class="lbl" rowspan="2">الأب</td>
+                        <td rowspan="2">${birth.father_name || ''}</td>
+                        <td>يمني <span class="chk">✓</span></td>
+                        <td rowspan="2">${birth.father_national_id || ''}</td>
+                        <td rowspan="2">${birth.birth_district || ''} ${birth.birth_governorate || ''}</td>
+                    </tr>
+                    <tr>
+                        <td>جنسية الأجنبي ............</td>
+                    </tr>
+                    <tr>
+                        <td class="lbl" rowspan="2">الأم</td>
+                        <td rowspan="2">${birth.mother_name || ''}</td>
+                        <td>يمنية <span class="chk">✓</span></td>
+                        <td rowspan="2">${birth.mother_national_id || ''}</td>
+                        <td rowspan="2">${birth.birth_district || ''} ${birth.birth_governorate || ''}</td>
+                    </tr>
+                    <tr>
+                        <td>جنسية الأجنبية ............</td>
+                    </tr>
+                </table>
+                <table class="off-tbl">
+                    <tr><th class="sec-head" colspan="4">بيانات المبلغ</th></tr>
+                    <tr>
+                        <td class="lbl">اسم المبلغ</td>
+                        <td class="lbl">علاقته بالمولود</td>
+                        <td class="lbl">رقم البطاقة الشخصية الذكية/ الجواز</td>
+                        <td class="lbl">محل الإقامة</td>
+                    </tr>
+                    <tr>
+                        <td>${birth.father_name || ''}</td>
+                        <td>والد المولود</td>
+                        <td>${birth.father_national_id || ''}</td>
+                        <td>${birth.birth_district || ''} ${birth.birth_governorate || ''}</td>
+                    </tr>
+                </table>
+                <div class="foot-note">
+                    تم تقييد واقعة الميلاد وفقاً للبيانات المذكورة أعلاه في سجل المواليد بـ${hospitalName} سجل رقم ............ بقيد رقم ............ بتاريخ ..../..../.... بمعرفة رئيس قسم السجلات الطبية ......................
                 </div>
-                
-                <div class="data-section">
-                    <div class="section-title">👨‍👩‍👧 بيانات الأبوين</div>
-                    <div class="row">
-                        <span class="label">اسم الأب:</span>
-                        <span class="value"><strong>${birth.father_name || '---'}</strong></span>
-                    </div>
-                    <div class="row">
-                        <span class="label">اسم الأم:</span>
-                        <span class="value"><strong>${birth.mother_name || '---'}</strong></span>
-                    </div>
-                    <div class="row">
-                        <span class="label">رقم هاتف الأم:</span>
-                        <span class="value" dir="ltr">${birth.mother_phone || '---'}</span>
-                    </div>
+                <div class="sign-row">
+                    <div class="s"><div class="ln"></div>التوقيع والختم</div>
+                    <div class="s" style="font-size:11px;color:#555;">رقم المولود بالنظام: ${birth.birth_number || ''}</div>
                 </div>
-                
-                <div class="data-section" style="margin-top:4px;">
-                    <div class="section-title">🔢 أرقام التتبع</div>
-                    <div class="row">
-                        <span class="label">رقم المولود:</span>
-                        <span class="value"><strong>${birth.birth_number || '---'}</strong></span>
-                    </div>
-                    <div class="row">
-                        <span class="label">رقم الإخطار:</span>
-                        <span class="value"><strong>${notificationNumber}</strong></span>
-                    </div>
-                </div>
-                
-                <div class="barcode-section">
-                    <div class="barcode-text">* ${notificationNumber} *</div>
-                    <div class="barcode-label">رمز الاستعلام - رقم الإخطار: ${notificationNumber}</div>
-                </div>
-                
-                <div class="signatures">
-                    <div class="signature-box">
-                        <div class="line"></div>
-                        <div class="name">${birth.midwife_name || birth.health_officer_name || birth.father_name || '---'}</div>
-                        <div class="title">${birth.registration_source === 'midwife' ? 'توقيع القابلة' : 'توقيع موظف الصحة'}</div>
-                    </div>
-                    <div class="signature-box">
-                        <div class="line"></div>
-                        <div class="name"></div>
-                        <div class="title">توقيع مدير المستشفى</div>
-                    </div>
                 </div>
                 
                 <script>
